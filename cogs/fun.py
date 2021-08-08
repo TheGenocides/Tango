@@ -15,61 +15,7 @@ class Fun(commands.Cog):
 		self.bot = bot
 		self.launch_time = datetime.datetime.utcnow()
 
-	def is_verified():
-		def predicate(ctx):
-			if ctx.guild.id == 858312394236624957:
-				verified_role=ctx.guild.get_role(858312618917101598)
-				if verified_role in ctx.author.roles:
-					return True
-				return False
-			return False
-		return commands.check(predicate)
 	
-	@commands.command("pings", description="Ping all staff for emergency reason, if you abuse this command you will get a warn or a mute")
-	@commands.guild_only()
-	@commands.check(is_verified())
-	@commands.cooldown(1, 10, commands.BucketType.guild)
-	async def ping_staff(self, ctx):
-		msg=await ctx.send_embed(
-			title="Tell me your reason",
-			description="Type a reason for this command, you need to enter 10 to 100 chars. For this command only emergency reason like raid, someone spam, NSFW in chat, etc will apply. For question you have to open a ticket, if not then we will warn you!",
-			color=discord.Color.red()
-		)
-		try:
-			reason=await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author and msg.channel == ctx.channel, timeout=20)
-		except asyncio.TimeoutError:
-			await ctx.send_error("Timeout! aborting...")
-		
-		else:
-			if not len(reason.content) >= 10 and len(reason.content) <= 100:
-				await ctx.send_error("Need more chars in reason. Minimum of 10 to 100 chars")
-				ctx.command.reset_cooldown(ctx)
-				return
-
-			await msg.edit(embed=discord.Embed(
-				title="Confirmation.",
-				description="If you react 👍 you will ping **the whole staff team**. Make sure to put the right reason for this, an incorect reason might result of a warn or a mute. You have 30 seconds to confirm your decision, react this message with 👍 to confirm this request, react with 👎 to decline it",
-				color=discord.Color.red()
-			))
-			await msg.add_reaction("👍")
-			await msg.add_reaction("👎")
-			try:
-				reaction, user=await self.bot.wait_for("reaction_add", check=lambda reaction, user: user == ctx.author, timeout=30)
-			except asyncio.TimeoutError:
-				await ctx.send_error("Timeout! aborting...")
-			
-			else:
-				if str(reaction.emoji) == "👍":
-					await ctx.send("<@&858312970182459422>", embed=discord.Embed(
-						title="Help Us Staff!", 
-						description=f"{reason.content}, please help us staff!", 
-						color=discord.Color.red()))
-
-				else:
-					await ctx.send_error("Timeout! Aborting...")
-					return
-
-
 	@commands.command("uptime", description="Show the bot uptime")
 	async def _uptime(self, ctx):
 		"""Show the bot uptime"""
