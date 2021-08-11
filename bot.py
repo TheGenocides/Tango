@@ -6,15 +6,7 @@ import difflib
 #======================
 
 from discord.ext import commands
-from flask import Flask
-from threading import Thread
 from dislash import SlashClient, Option, Type
-
-app=Flask("")
-
-@app.route("/") #Going to use uptimebot for pingging. Gotta change later!
-def main():
-    return "Your bot is alive!"
 
 class Tango(commands.Bot):
 	def __init__(self):
@@ -24,7 +16,7 @@ class Tango(commands.Bot):
 			intents=discord.Intents.all(),
 			allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=False, replied_user=True),
 			case_insensitive=True,
-			activity=discord.Game("Your Mom"),
+			activity=discord.Activity(name="A Media Social >:)", type=discord.ActivityType.competing),
 			status=discord.Status.idle,
 			owner_ids=[685082846993317953, 687943803604303872]
 		)
@@ -139,13 +131,6 @@ class Tango(commands.Bot):
 		self.load_extension("jishaku")
 		self.run(token)	
 
-	def keep_alive(self):
-		def run():
-			app.run(host="0.0.0.0", port=8080)
-
-		server = Thread(target=run)
-		server.start()
-
 def setup(self):
 	self.add_cog(Tango(self))
 
@@ -238,9 +223,7 @@ class HelpPage(commands.HelpCommand):
 			text=f"Requested by {self.context.author}",
 			icon_url=self.context.author.avatar_url
 		)
-
 		
-
 		await channel.send(embed=em)
 
 	async def command_not_found(self, error):
