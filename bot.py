@@ -2,6 +2,8 @@ import discord
 import helper
 import os
 import difflib
+import datetime
+import helper
 
 #======================
 
@@ -21,9 +23,37 @@ class Tango(commands.Bot):
 			owner_ids=[685082846993317953, 687943803604303872]
 		)
 
+	async def on_disconnect(self):
+		channel=self.get_channel(875023982418599956)
+		owner=self.get_user(self.owner_ids[0])
+
+		msg=await channel.send(
+			owner.mention,
+			embed=discord.Embed(
+				title="<:dnd:873411447416320050> Disconnect",
+				description="I got disconnected <:dnd:873411447416320050>",
+				color=discord.Color.red(),
+				timestamp=datetime.datetime.utcnow()
+			)
+		)
+		await msg.publish()
+
+	async def on_connect(self):
+		channel=self.get_channel(875023982418599956)
+		owner=self.get_user(self.owner_ids[0])
+		msg=await channel.send(
+			owner.mention,
+			embed=discord.Embed(
+				title="<:Online:873411447479214110> Online",
+				description="I am back online <:Online:873411447479214110>",
+				color=discord.Color.green(),
+				timestamp=datetime.datetime.utcnow()
+			)
+		)
+		await msg.publish()
+
 	async def on_ready(self):
 		await self.wait_until_ready()
-		owner=self.get_user(self.owner_ids[0])
 		db=await helper.connect("db/channel.db")
 		cur=await helper.cursor(db)
 		await cur.execute("""
@@ -49,7 +79,8 @@ class Tango(commands.Bot):
 					gender text,
 					verified text,
 					email text,
-					password text
+					password text,
+					age text
 		)""")
 
 		db3=await helper.connect("db/video.db")
@@ -72,7 +103,7 @@ class Tango(commands.Bot):
 		await db.commit()
 		await db2.commit()
 		await db3.commit()
-		await owner.send("Im Ready To Be Use!")
+		
 
 	async def on_command_error(self, ctx, error):
 		CommandNotFound="<class 'discord.ext.commands.errors.CommandNotFound'>"
@@ -296,7 +327,70 @@ class HelpPage(commands.HelpCommand):
 #Slash Command
 
 slash=SlashClient(Tango())
-guild_ids=[858312394236624957]
+guild_ids=[858312394236624957, 843610787867525120]
+
+
+@slash.user_command(name="Profile", guild_ids=guild_ids)
+async def _profile(inter):
+	member=inter.author
+	data=await helper.find_in_channel(member.id)
+	info=await helper.find_in_info(member.id)
+	await inter.respond(
+		embed=discord.Embed(
+			title="Profile Menu!",
+			description=data[2],
+			color=discord.Color.from_rgb(213, 240, 213),
+			timestamp=datetime.datetime.utcnow()
+				).set_author(
+					name=f"{member.name} (@{data[1]})",
+					icon_url=data[3]
+				).set_footer(
+					text=f"Source: @{data[1]} | ID: {member.id}",
+					icon_url=data[3]
+				).add_field(
+					name="Subs",
+					value=data[4]
+				).add_field(
+					name="Videos",
+					value=data[8]
+				).add_field(
+					name="Views",
+					value=data[7]
+				).add_field(
+					name="Likes",
+					value=data[5]
+				).add_field(
+					name="Dislikes",
+					value=data[6]
+				).add_field(
+					name="\u200b",
+					value="\u200b"
+				).add_field(
+					name="Account Information",
+					value="Here is all of your account information! You can change it using p!set command!",
+					inline=False
+				).add_field(
+					name="Gender",
+					value=info[1]
+				).add_field(
+					name="Email",
+					value=info[3]
+				).add_field(
+					name="Password",
+					value="||Shushh||",
+					inline=False
+				).add_field(
+					name="Account Age",
+					value=info[5]
+				)
+			)
+
+
+@slash.message_command(name="Resend", guild_ids=guild_ids)
+async def resend(inter):
+    # Message commands are visible in message context menus
+    # inter is instance of ContextMenuInteraction
+    await inter.respond(inter.message.content)
 
 @slash.command(
     name="echo",

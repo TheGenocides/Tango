@@ -13,22 +13,21 @@ class Information(commands.Cog):
 			title="Idea for the future",
 			description="""
 			**__Social Commands__**
-			**•** ~~Likes/disslikes/views info on p!search~~
-			**•** ~~Likes/disslikes/views button on p!search~~
-			**•** ~~set command for setting channel name, description, gender, email, password, banner etc~~
 			**•** p!info command for all info of a user
-			**•** ~~Show more info in search commands~~
 			**•** A report command if a video is breaking discord tos
-			**•** ~~Stats command for every video~~
-			**•** ~~Fix p!videos command~~
-			**•** ~~Make a information category for the bot info~~
+			**•** Add unique ID to a video.
+			**•** Make a bin command. Everytime a user deleted a video the video will get store in the bin.
+			**•** Reupload command using Unique ID.
 			
 			
-			**__Fun Commands__**\n
-			**•** More fun commands :/""",
+			**__Notification Commands__**\n
+			**•** Youtube notif
+			**•** FB notif
+			**•** Instagram notif
+			""",
 			color=discord.Color.orange()
 		).set_footer(
-			text="• Last updated 8/1/2021"
+			text="• Last updated 8/11/2021"
 		))
 
 	@commands.command("info", description="Info for Tango bot")
@@ -37,7 +36,7 @@ class Information(commands.Cog):
 			embed=discord.Embed(
 				title="Tango Bot",
 				url="https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot",
-				description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/cZuXWrUxnn))",
+				description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/XHBhg6A4jJ))",
 				color=discord.Color.from_rgb(213, 240, 213)
 			),
 			components=[
@@ -74,7 +73,7 @@ class Information(commands.Cog):
 					embed=discord.Embed(
 						title="Tango Bot",
 						url="https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot",
-						description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/cZuXWrUxnn))",
+						description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/XHBhg6A4jJ))",
 						color=discord.Color.from_rgb(213, 240, 213)
 					),
 					components=[
@@ -107,7 +106,8 @@ class Information(commands.Cog):
 						url="https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot",
 						description="Tango bot have a lot of command categories, right now Tango bot has 4 categories, 15 commands, 10 of them can be use by anyone without any special permissions!",
 						color=discord.Color.from_rgb(213, 240, 213)
-					)
+					),
+					ephemeral=True
 				)
 
 			elif id_ == "database-button":
@@ -115,7 +115,7 @@ class Information(commands.Cog):
 					embed=discord.Embed(
 						title="Tango Bot",
 						url="https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot",
-						description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/cZuXWrUxnn))",
+						description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/XHBhg6A4jJ))",
 						color=discord.Color.from_rgb(213, 240, 213)
 					),
 					components=[
@@ -149,7 +149,8 @@ class Information(commands.Cog):
 						url="https://www.sqlite.org/index.html",
 						description="Tango use sqlite type database specifically Tango bot uses aiosqlite. Dont you worry, The data will not be delete and it will not be reset. The data also hold a lot of capacity!",
 						color=discord.Color.from_rgb(213, 240, 213)
-					)
+					),
+					ephemeral=True
 				)
 			
 			elif id_ == "robot-button":
@@ -157,7 +158,7 @@ class Information(commands.Cog):
 					embed=discord.Embed(
 						title="Tango Bot",
 						url="https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot",
-						description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/cZuXWrUxnn))",
+						description=f"Hello {ctx.author.mention}, im Tango! A discord bot with Social Media Functions. Gain followers, Post your favorite video and get tons of views! Become the most followed channel! Post your meme and messages in community post! Interact with your fans through community post! All seen across multiple country! \n\n([invite me!](https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot) | [Support Server](https://discord.gg/XHBhg6A4jJ))",
 						color=discord.Color.from_rgb(213, 240, 213)
 					),
 					components=[
@@ -192,7 +193,8 @@ class Information(commands.Cog):
 						url="https://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot",
 						description=f"Tango was created by {owner.name} at the 4th of February 2021 as an AutoRoleBot. TheGenocide change the idea to SocialMedia bot after a while of thinking and its rare to find SocialMedia bot.",
 						color=discord.Color.from_rgb(213, 240, 213)
-					)
+					),
+					ephemeral=True
 				)
 
 			
