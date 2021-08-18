@@ -3,7 +3,6 @@ import helper
 import os
 import difflib
 import datetime
-import helper
 
 #======================
 
@@ -18,9 +17,9 @@ class Tango(commands.Bot):
 			intents=discord.Intents.all(),
 			allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=False, replied_user=True),
 			case_insensitive=True,
-			activity=discord.Activity(name="A Media Social >:)", type=discord.ActivityType.competing),
+			activity=discord.Activity(name="A Social Media >:)", type=discord.ActivityType.competing),
 			status=discord.Status.idle,
-			owner_ids=[685082846993317953, 687943803604303872]
+			owner_ids=[685082846993317953, 687943803604303872, 806725119917162527]
 		)
 
 	async def on_disconnect(self):
@@ -87,7 +86,7 @@ class Tango(commands.Bot):
 		cur3=await helper.cursor(db3)
 		await cur3.execute("""
 				CREATE TABLE IF NOT EXISTS video (
-					member_id integer,
+					member_id integer, 
 					title text,
 					description text,
 					link text,
@@ -97,12 +96,20 @@ class Tango(commands.Bot):
 					old_likes text,
 					old_dislikes text,
 					content_type text,
-					date integer
+					date integer,
+					ID text,
+					old_views
 		)""")
-
 		await db.commit()
 		await db2.commit()
 		await db3.commit()
+		await cur.close()
+		await cur2.close()
+		await cur3.close()
+		await db.close()
+		await db2.close()
+		await db3.close()
+		print("Im online :)")
 		
 
 	async def on_command_error(self, ctx, error):
@@ -148,6 +155,7 @@ class Tango(commands.Bot):
 
 			await ctx.send(embed=em)
 			return
+		
 		else:
 			raise error
 
@@ -324,43 +332,54 @@ class HelpPage(commands.HelpCommand):
 		)
 		await channel.send(embed=embed)
 
-#Slash Command
+#Context Menu Command
 
 slash=SlashClient(Tango())
 guild_ids=[858312394236624957, 843610787867525120]
 
 
-@slash.user_command(name="Profile", guild_ids=guild_ids)
+@slash.user_command(name="Show Your Profile!", guild_ids=guild_ids)
 async def _profile(inter):
 	member=inter.author
 	data=await helper.find_in_channel(member.id)
 	info=await helper.find_in_info(member.id)
+	
+	if not data or not info:
+		await inter.respond(
+			embed=discord.Embed(
+			description="You haven't made your channel, Use p!start command! (Start command is under renovation)",
+			color=discord.Color.red()
+			)
+		)
+		return
+
+	
 	await inter.respond(
-		embed=discord.Embed(
-			title="Profile Menu!",
-			description=data[2],
-			color=discord.Color.from_rgb(213, 240, 213),
-			timestamp=datetime.datetime.utcnow()
+			embed=discord.Embed(
+				title="Profile Menu!",
+				description=data[2],
+				color=discord.Color.from_rgb(213, 240, 213),
+				timestamp=datetime.datetime.utcnow()
 				).set_author(
-					name=f"{member.name} (@{data[1]})",
+					name=f"{inter.author.name} (@{data[1]})",
 					icon_url=data[3]
 				).set_footer(
-					text=f"Source: @{data[1]} | ID: {member.id}",
+					text=f"Source: @{data[1]} | ID: {inter.author.id}",
 					icon_url=data[3]
 				).add_field(
-					name="Subs",
+					name="<:follow:875659362264309791> Subs",
 					value=data[4]
 				).add_field(
-					name="Videos",
+					name="<:blurple_camera:875659362331394058> Videos",
 					value=data[8]
 				).add_field(
-					name="Views",
+					name="🫂 Views",
 					value=data[7]
 				).add_field(
-					name="Likes",
+					name="<:likes:875659362343993404> Likes",
 					value=data[5]
 				).add_field(
-					name="Dislikes",
+					name="<:dislikes:875659362264309821> Dislikes",
 					value=data[6]
 				).add_field(
 					name="\u200b",
@@ -370,27 +389,95 @@ async def _profile(inter):
 					value="Here is all of your account information! You can change it using p!set command!",
 					inline=False
 				).add_field(
-					name="Gender",
+					name="🫂 Gender",
 					value=info[1]
 				).add_field(
-					name="Email",
+					name="📧 Email",
 					value=info[3]
 				).add_field(
-					name="Password",
-					value="||Shushh||",
+					name="🔑 Password",
+					value="||[Password Redacted]||",
 					inline=False
 				).add_field(
-					name="Account Age",
+					name="⌛ Account Age",
 					value=info[5]
 				)
 			)
 
+@slash.message_command(name="Show User Profile!", guild_ids=guild_ids)
+async def _Profile(inter):
+	member=inter.message.author
+	data=await helper.find_in_channel(member.id)
+	info=await helper.find_in_info(member.id)
+	
+	if not data:
+		await inter.respond(
+			embed=discord.Embed(
+			description="You haven't made your channel, Use p!start command! (Start command is under renovation)",
+			color=discord.Color.red()
+			)
+		)
+		return
 
-@slash.message_command(name="Resend", guild_ids=guild_ids)
-async def resend(inter):
-    # Message commands are visible in message context menus
-    # inter is instance of ContextMenuInteraction
-    await inter.respond(inter.message.content)
+	if not info:
+		await inter.respond(
+			embed=discord.Embed(
+			color=discord.Color.red()
+		).set_footer(
+			text="You havent made a video, use p!post command!"
+		)
+	)
+		
+	
+	await inter.respond(
+			embed=discord.Embed(
+				title="Profile Menu!",
+				description=data[2],
+				color=discord.Color.from_rgb(213, 240, 213),
+				timestamp=datetime.datetime.utcnow()
+				).set_author(
+					name=f"{inter.author.name} (@{data[1]})",
+					icon_url=data[3]
+				).set_footer(
+					text=f"Source: @{data[1]} | ID: {inter.author.id}",
+					icon_url=data[3]
+				).add_field(
+					name="<:follow:875659362264309791> Subs",
+					value=data[4]
+				).add_field(
+					name="<:blurple_camera:875659362331394058> Videos",
+					value=data[8]
+				).add_field(
+					name="🫂 Views",
+					value=data[7]
+				).add_field(
+					name="<:likes:875659362343993404> Likes",
+					value=data[5]
+				).add_field(
+					name="<:dislikes:875659362264309821> Dislikes",
+					value=data[6]
+				).add_field(
+					name="\u200b",
+					value="\u200b"
+				).add_field(
+					name="Account Information",
+					value="Here is all of your account information! You can change it using p!set command!",
+					inline=False
+				).add_field(
+					name="🫂 Gender",
+					value=info[1]
+				).add_field(
+					name="📧 Email",
+					value=info[3]
+				).add_field(
+					name="🔑 Password",
+					value="||[Password Redacted]||",
+					inline=False
+				).add_field(
+					name="⌛ Account Age",
+					value=info[5]
+				)
+			)
 
 @slash.command(
     name="echo",

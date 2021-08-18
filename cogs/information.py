@@ -1,11 +1,25 @@
 import discord
-
 from dislash import ActionRow, Button, ButtonStyle, SelectMenu, SelectOption
 from discord.ext import commands
+import datetime
 
 class Information(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+		self.launch_time = datetime.datetime.utcnow()
+
+	
+	@commands.command("uptime", description="Show the bot uptime")
+	async def _uptime(self, ctx):
+		"""Show the bot uptime"""
+		delta_uptime = datetime.datetime.utcnow() - self.launch_time
+		hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
+		minutes, seconds = divmod(remainder, 60)
+		days, hours = divmod(hours, 24)
+		await ctx.send(embed=discord.Embed(
+			description=f"**{days}D, {hours}H, {minutes}M, {seconds}S**",
+			color=discord.Color.from_rgb(213, 240, 213)
+		))
 
 	@commands.command("idea", description="SHow a list of ideas for Tango bot in the future")
 	async def _idea(self, ctx):

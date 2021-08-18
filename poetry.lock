@@ -254,7 +254,7 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jishaku"
-version = "2.1.0"
+version = "2.2.0"
 description = "A discord.py extension including useful tools for bot development and debugging."
 category = "main"
 optional = false
@@ -262,6 +262,7 @@ python-versions = ">=3.8.0"
 
 [package.dependencies]
 braceexpand = ">=0.1.7"
+click = ">=8.0.1"
 "discord.py" = ">=1.7.2"
 import-expression = ">=1.0.0,<2.0.0"
 
@@ -362,7 +363,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "84c06baab8c2af163f84582822cbe4685df1b8169576b83830cde418547a660f"
+content-hash = "09de7aec2d293db149294c93df02d19abddcb6ec23832d9b0a274e88dbcc32af"
 
 [metadata.files]
 aiohttp = [
@@ -489,10 +490,10 @@ jinja2 = [
     {file = "Jinja2-3.0.1.tar.gz", hash = "sha256:703f484b47a6af502e743c9122595cc812b0271f661722403114f71a79d0f5a4"},
 ]
 jishaku = [
-    {file = "jishaku-2.1.0-py3-none-any.whl", hash = "sha256:28f0751934896024780b642dbae18d55be5535ab20839322c69b6fdba42e384d"},
-    {file = "jishaku-2.1.0-py3.8.egg", hash = "sha256:9dc9e4e6a415aab6dc06e6e0a3fe1ea4370a708169fd837b56ceb8e6016ff673"},
-    {file = "jishaku-2.1.0-py3.9.egg", hash = "sha256:ea5e25deb683483421e24d178cdee6ba61510f6e60c02cada548e19f60b6d996"},
-    {file = "jishaku-2.1.0.tar.gz", hash = "sha256:d593815faa7872d4288f93df2b31d43855bb313adc99c687c86408bdc06feb80"},
+    {file = "jishaku-2.2.0-py3-none-any.whl", hash = "sha256:a012a751cee43e32a108e8a04266a0d0b7a898e18ef12aac33699bcc9b5f9264"},
+    {file = "jishaku-2.2.0-py3.8.egg", hash = "sha256:e33e7b943f8db825d5e0d3adf685727a0bbcd1fa3210b79608df8da6a070e7d4"},
+    {file = "jishaku-2.2.0-py3.9.egg", hash = "sha256:f31c69d0122d27fba27fdc00052c58ccf90a15acb4c3ecc32dea167f5cd0605c"},
+    {file = "jishaku-2.2.0.tar.gz", hash = "sha256:89ff33d8eb620311df1ff3c92dc4872b6560b58a70c181b0354e51ddd5fc6645"},
 ]
 markupsafe = [
     {file = "MarkupSafe-2.0.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:d8446c54dc28c01e5a2dbac5a25f071f6653e6e40f3a8818e8b45d790fe6ef53"},
