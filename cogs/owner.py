@@ -6,7 +6,7 @@ import traceback
 
 from discord.ext import commands
 
-class Owner(commands.Cog):
+class owner(commands.Cog):
 	"""Only owner can use these commands"""
 	def __init__(self, bot):
 		self.bot = bot
@@ -84,4 +84,4 @@ class Owner(commands.Cog):
 			))
 
 def setup(bot):
-	bot.add_cog(Owner(bot))
+	bot.add_cog(owner(bot))

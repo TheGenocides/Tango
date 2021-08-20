@@ -3,7 +3,7 @@ from dislash import ActionRow, Button, ButtonStyle, SelectMenu, SelectOption
 from discord.ext import commands
 import datetime
 
-class Information(commands.Cog):
+class information(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.launch_time = datetime.datetime.utcnow()
@@ -21,8 +21,8 @@ class Information(commands.Cog):
 			color=discord.Color.from_rgb(213, 240, 213)
 		))
 
-	@commands.command("idea", description="SHow a list of ideas for Tango bot in the future")
-	async def _idea(self, ctx):
+	@commands.command("news", description="Show a list of ideas for Tango bot in the future")
+	async def _news(self, ctx):
 		await ctx.send(embed=discord.Embed(
 			title="Idea for the future",
 			description="""
@@ -214,4 +214,4 @@ class Information(commands.Cog):
 			
 
 def setup(bot):
-	bot.add_cog(Information(bot))
+	bot.add_cog(information(bot))

@@ -9,12 +9,18 @@ from dislash import ActionRow, Button, ButtonStyle
 from discord.ext import commands
 
 
-class Fun(commands.Cog):
+class fun(commands.Cog):
 	"""Fun Command for Tango bot"""
 	def __init__(self, bot):
 		self.bot = bot
 		
-		
+	@commands.command()
+	async def msg(self, ctx):
+		msg=await ctx.channel.fetch_message(878118532796272671)
+		await ctx.send(msg)
+		await ctx.send(msg.attachments)
+		for x in msg.attachments:
+			await ctx.send(x)
 
 	@commands.command("ping", description="Show the bot latency")
 	async def _ping(self, ctx):
@@ -220,4 +226,4 @@ class Fun(commands.Cog):
 					]	
 				)
 def setup(bot):
-	bot.add_cog(Fun(bot))
+	bot.add_cog(fun(bot))

@@ -17,39 +17,22 @@ class Tango(commands.Bot):
 			intents=discord.Intents.all(),
 			allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=False, replied_user=True),
 			case_insensitive=True,
-			activity=discord.Activity(name="A Social Media >:)", type=discord.ActivityType.competing),
+			activity=discord.Activity(name="10 Accounts | p!help", type=discord.ActivityType.watching),
 			status=discord.Status.idle,
 			owner_ids=[685082846993317953, 687943803604303872, 806725119917162527]
 		)
 
-	async def on_disconnect(self):
-		channel=self.get_channel(875023982418599956)
-		owner=self.get_user(self.owner_ids[0])
-
-		msg=await channel.send(
-			owner.mention,
-			embed=discord.Embed(
-				title="<:dnd:873411447416320050> Disconnect",
-				description="I got disconnected <:dnd:873411447416320050>",
-				color=discord.Color.red(),
-				timestamp=datetime.datetime.utcnow()
-			)
-		)
-		await msg.publish()
-
-	async def on_connect(self):
-		channel=self.get_channel(875023982418599956)
-		owner=self.get_user(self.owner_ids[0])
-		msg=await channel.send(
-			owner.mention,
-			embed=discord.Embed(
-				title="<:Online:873411447479214110> Online",
-				description="I am back online <:Online:873411447479214110>",
-				color=discord.Color.green(),
-				timestamp=datetime.datetime.utcnow()
-			)
-		)
-		await msg.publish()
+	async def on_message(self, msg):
+		if msg.mentions:
+			if self.user in msg.mentions and len(msg.content) <= 22:
+				await msg.reply(
+					embed=discord.Embed(
+						description="Hello there, my prefix is `p!`",
+						color=discord.Color.red()
+					)
+				)
+		
+		await self.process_commands(msg)
 
 	async def on_ready(self):
 		await self.wait_until_ready()
@@ -67,7 +50,8 @@ class Tango(commands.Bot):
 					views integer,
 					videos integer,
 					verified_channel text,
-					money integer
+					money integer,
+					old_subs text
 		)""")
 
 		db2=await helper.connect("db/info.db")
@@ -98,7 +82,8 @@ class Tango(commands.Bot):
 					content_type text,
 					date integer,
 					ID text,
-					old_views
+					old_views text,
+					deleted text
 		)""")
 		await db.commit()
 		await db2.commit()
@@ -181,9 +166,9 @@ class HelpPage(commands.HelpCommand):
 		return command.signature if command.signature else " "
 
 	async def send_bot_help(self, mapping):
-		cog_description={"Owner": "These command can only use by one of the owner of the bot.", "Fun": "Commands that can be use by all members without any specific permissions or roles.", "Social": "Social is a group of commands that contain most of the commands that other can use!", "Jishaku": "Jishaku commands", "Information": "Commands that have all information that you need about Tango bot"}
+		cog_description={"owner": "These command can only use by one of the owner of the bot.", "fun": "Commands that can be use by all members without any specific permissions or roles.", "social": "Social is a group of commands that contain most of the commands that other can use!", "jishaku": "Jishaku commands", "information": "Commands that have all information that you need about Tango bot"}
 		
-		emojies={"Owner": "👑", "Fun": "🤡", "Social": "🗨️", "Jishaku": "⚙️", "Information": "🛑"}
+		emojies={"owner": "👑", "fun": "🤡", "social": "🗨️", "jishaku": "⚙️", "information": "🛑"}
 		em=discord.Embed(
 			title="HelpCommand",
 			description="Hello there, im Tango. A fun bot with a social media functions! Gain followers, million of views, and become the most followed channel! Post your meme and messages in community post! Post your video and get ton of review!. All seen across multiple country!\n\n**Select A Category:**",
@@ -269,7 +254,7 @@ class HelpPage(commands.HelpCommand):
 		channel = self.get_destination()
 		commands=['uptime', 'ping', 'idea', 'info', "start", "channel", "post", "videos", "search", "setting"]
 		possi=difflib.get_close_matches(error.lower(), commands)
-		category=difflib.get_close_matches(error.title(), ["Owner", "Fun", "Social", "Information"])
+		category=difflib.get_close_matches(error.title(), ["owner", "fun", "social", "information"])
 		if category and not possi:
 			embed = discord.Embed(
 				title=f"No Category called '{error}' ",

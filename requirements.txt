@@ -67,7 +67,7 @@ itsdangerous==2.0.1
 jedi==0.15.2
 jeepney==0.6.0
 Jinja2==3.0.1
-jishaku==2.1.0
+jishaku==2.2.0
 joblib==1.0.1
 Keras-Preprocessing==1.1.2
 keyring==21.8.0

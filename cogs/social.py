@@ -4,6 +4,8 @@ import helper
 import time
 import datetime
 import ast
+import validators
+import requests
 
 #===============================
 
@@ -11,13 +13,13 @@ from uuid import uuid4
 from discord.ext import commands
 from dislash import ActionRow, Button, ButtonStyle, SelectMenu, SelectOption, ResponseType
 
-class Social(commands.Cog):
+class social(commands.Cog):
 	"""Social is a group of commands that contain most of the commands that other can use ;)"""
 	def __init__(self, bot):
 		self.bot = bot
 		self.special_chars = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`"]
 		self.channel_error = discord.Embed(
-			description="You haven't made your channel, Use p!start command! (Start command is under renovation)",
+			description="You haven't made your channel, Use p!start command!",
 			color=discord.Color.red()
 		)
 
@@ -158,9 +160,10 @@ class Social(commands.Cog):
 		@on_click.matching_id("green")
 		async def _green(inter):
 			nonlocal on_click
+			on_click.kill()
 			try:
 				#Channel Name 
-				await inter.reply(
+				message=await inter.reply(
 					type=ResponseType.ChannelMessageWithSource,
 					embed=discord.Embed(
 					title="Step 1",
@@ -200,7 +203,7 @@ class Social(commands.Cog):
 
 					
 					#Select Gender
-					embed = await ctx.send(embed=discord.Embed(
+					embed = await message.edit(embed=discord.Embed(
 						title="Step 2",
 						description="Select your gender with the dropdown below this embed!\nWe have Male, Female, and NonBinary",
 						color=discord.Color.from_rgb(213, 240, 213)
@@ -237,7 +240,7 @@ class Social(commands.Cog):
 					await asyncio.sleep(2)
 
 					#Select email
-					await ctx.send(embed=discord.Embed(
+					await message.edit(embed=discord.Embed(
 						title="Step 3",
 						description="Enter your email name, enter your email without any special chars! (e.g EpicUser123, DiscordUser321) You need a minimum of 5 to 13 characters",
 						color=discord.Color.from_rgb(213, 240, 213)
@@ -363,7 +366,6 @@ class Social(commands.Cog):
 						buttons
 					]
 				)
-					on_click.kill()
 					on_click=confirm.create_click_listener(timeout=120.0)
 					
 					@on_click.not_from_user(ctx.author, cancel_others=True)
@@ -379,7 +381,7 @@ class Social(commands.Cog):
 
 					@on_click.matching_id("green")
 					async def _Green(inter):
-						await cur.execute("INSERT INTO channel VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, msg.content, "Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!", str(ctx.author.avatar_url), 0, 0, 0, 0, 0, "no", 0))
+						await cur.execute("INSERT INTO channel VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, msg.content, "Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!", str(ctx.author.avatar_url), 0, 0, 0, 0, 0, "no", 0, f'["{ctx.author.id}"]'))
 						await cur2.execute("INSERT INTO info VALUES (?, ?, ?, ?, ?, ?)", (ctx.author.id, label, "yes", email, password.content, f"<t:{int(age)}:F>"))
 						await db.commit()
 						await db2.commit()
@@ -507,10 +509,6 @@ class Social(commands.Cog):
 				)
 			)
 		
-		print("e")
-		
-
-		
 	@commands.command("post",  description="Post a video!")
 	async def _post(self, ctx):
 		# if not ctx.author.id in self.bot.owner_ids:
@@ -545,6 +543,15 @@ class Social(commands.Cog):
 						text="Title must have 4 to 100 characters"
 					))
 					return
+				try:
+					if title.attachments or requests.get(title.content).status_code <= 200:
+						await ctx.send(embed=discord.Embed(
+							description="Dont put attachments or url in title",
+							color=discord.Color.red()
+						))
+						return
+				except:
+					pass
 
 				await ctx.send(embed=discord.Embed(
 					title="Description?",
@@ -557,8 +564,19 @@ class Social(commands.Cog):
 					)
 				)
 
-				description=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
-				description=description.content
+				descriptions=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
+				description=descriptions.content
+
+				try:
+					if descriptions.attachments or requests.get(description.content).status_code <= 200:
+						await ctx.send(embed=discord.Embed(
+							description="Dont put attachments or url in description",
+							color=discord.Color.red()
+						))
+						return
+				except:
+					pass
+
 				if len(description) == 1 and description == '.':
 					description = ""
 
@@ -672,10 +690,12 @@ class Social(commands.Cog):
 							@on_click.matching_id("green")
 							async def _green(inter):
 								nonlocal token
+								nonlocal on_click
+
 								date_=int(time.time())
 								con=await helper.connect("db/video.db")
 								cur=await helper.cursor(con)
-								await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(x), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', x.content_type, date_, token, f'["{ctx.author.id}"]'))
+								await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(x), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', x.content_type, date_, token, f'["{ctx.author.id}"]', "False"))
 								await con.commit()
 								await cur.close()
 								await con.close()
@@ -722,6 +742,8 @@ class Social(commands.Cog):
 
 							@on_click.matching_id("red")
 							async def _red(inter):
+								nonlocal on_click
+
 								await inter.reply(
 									content="Declined!", 
 									type=ResponseType.UpdateMessage,
@@ -762,8 +784,20 @@ class Social(commands.Cog):
 										color=discord.Color.red()
 									)
 								)
-
+				
 				elif attach.content.startswith("http"):
+					tenor="tenor.com" in attach.content
+					giphy="giphy.com" in attach.content
+					print(tenor)
+					print(giphy)
+					if tenor is False and giphy is False:
+						await ctx.send(embed=discord.Embed(
+								color=discord.Color.red()
+							).set_footer(
+								text="The URL is invalid :/\nTangoBot support: mp3/mp4/gif for gif only tenor and giphy are compatible!"
+						))	
+						return
+
 					em=await ctx.send(embed=discord.Embed(
 						title="Posting...",
 						color=discord.Color.from_rgb(213, 240, 213)
@@ -823,11 +857,12 @@ class Social(commands.Cog):
 					@on_click.matching_id("green")
 					async def _green(inter):
 						nonlocal token
+						nonlocal on_click
 
 						date_=int(time.time())
 						con=await helper.connect("db/video.db")
 						cur=await helper.cursor(con)
-						await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(attach.content), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', "link", date_, token, f'["{ctx.author.id}"]'))
+						await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(attach.content), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', "link", date_, token, f'["{ctx.author.id}"]', "False"))
 						await con.commit()
 						await cur.close()
 						await con.close()
@@ -871,6 +906,8 @@ class Social(commands.Cog):
 
 					@on_click.matching_id("red")
 					async def _red(inter):
+						nonlocal on_click
+
 						await inter.reply(
 							content="Declined!", 
 							type=ResponseType.UpdateMessage,
@@ -997,6 +1034,13 @@ class Social(commands.Cog):
 								custom_id="view-button",
 								disabled=True
 							),
+							Button(
+								style=ButtonStyle.grey,
+								label=channel_data[4],
+								emoji="<:user_icon:877535226694352946>",
+								custom_id="subs-button",
+								disabled=True
+							), 
 							Button(
 								style=ButtonStyle.green,
 								label=data[i][4],
@@ -1135,9 +1179,9 @@ class Social(commands.Cog):
 								disabled=True
 							),
 							Button(
-								style=ButtonStyle.blurple,
+								style=ButtonStyle.grey,
 								label=channel_data[4],
-								emoji=discord.PartialEmoji(name="follow", id=875659362264309791, animated=False),
+								emoji="<:user_icon:877535226694352946>",
 								custom_id="subs-button",
 								disabled=True
 							),
@@ -1172,8 +1216,8 @@ class Social(commands.Cog):
 		con=await helper.connect("db/channel.db")
 		cur=await helper.cursor(con)
 
-		await cur.execute("UPDATE channel SET views = 1 WHERE member_id = ?", (ctx.author.id,))
-
+		await cur.execute("UPDATE channel SET subscribers = 0 WHERE member_id = ?", (ctx.author.id,))
+		await cur.execute("UPDATE channel SET old_subs = ? WHERE member_id = ?", (f'["{ctx.author.id}"]', ctx.author.id))
 
 		await con.commit()
 		await cur.close()
@@ -1275,6 +1319,13 @@ class Social(commands.Cog):
 										disabled=True
 									),
 									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4],
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
+									),
+									Button(
 										style=ButtonStyle.green,
 										label=data[i][4],
 										emoji="<:likes:875659362343993404>",
@@ -1367,6 +1418,62 @@ class Social(commands.Cog):
 						await con2.close()
 						break
 
+					elif button_id == "subs-button":
+						subs=ast.literal_eval(channel_data[11])
+						if not str(ctx.author.id) in subs:
+							subs.append(str(ctx.author.id))
+		
+							await inter.send(embed=discord.Embed(
+								description=f"{ctx.author.mention} Sub the channel!",
+								color=discord.Color.from_rgb(213, 240, 213)
+							),
+								ephemeral=True
+							)
+			
+							await cur2.execute("UPDATE channel SET subscribers = subscribers + 1 WHERE member_id = ?", (channel_data[0],))
+							await cur2.execute("UPDATE channel SET old_subs = ? WHERE member_id = ?", (str(subs), channel_data[0]))
+							await con2.commit()
+
+						await file.edit(
+							content=data[i][0],
+							components=[
+								ActionRow(
+									Button(
+										style=ButtonStyle.blurple,
+										label=data[i][3],
+										emoji="\U0001f465",
+										custom_id="view-button",
+										disabled=True
+									),
+									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4] + 1,
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True
+									),
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][4],
+										emoji="<:likes:875659362343993404>",
+										custom_id="like-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][6]) else False 
+									),
+									Button(
+										style=ButtonStyle.red,
+										label=data[i][5],
+										emoji="<:dislikes:875659362264309821>",
+										custom_id="dislike-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][7]) else False
+									)
+								)
+							]
+						)
+
+						loop = False
+						await cur2.close()
+						await con2.close()
+
 					elif button_id == "like-button": #Like Button
 						likes=ast.literal_eval(data[i][6]) #list member who likes
 						dislikes=ast.literal_eval(data[i][7]) #list member who dislikes
@@ -1407,6 +1514,13 @@ class Social(commands.Cog):
 										emoji="\U0001f465",
 										custom_id="view-button",
 										disabled=True
+									),
+									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4],
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
 									),
 									Button(
 										style=ButtonStyle.green,
@@ -1474,6 +1588,13 @@ class Social(commands.Cog):
 										disabled=True
 									),
 									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4],
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
+									),
+									Button(
 										style=ButtonStyle.green,
 										label=data[i][4] - 1 if str(ctx.author.id) in ast.literal_eval(data[i][6]) else data[i][4],
 										emoji="<:likes:875659362343993404>",
@@ -1507,11 +1628,11 @@ class Social(commands.Cog):
 				channel_data=await helper.find_in_channel(data[i][8])
 				con=await helper.connect("db/video.db")
 				cur=await helper.cursor(con)
+
 				con2=await helper.connect("db/channel.db")
 				cur2=await helper.cursor(con2)
 				videos=await helper.find_videos(name)
 				data=[x for x in videos]
-				print(data)
 				if loop == True:
 					old_views=ast.literal_eval(data[i][11])
 					if not str(ctx.author.id) in old_views:
@@ -1573,6 +1694,13 @@ class Social(commands.Cog):
 									disabled=True
 								),
 								Button(
+									style=ButtonStyle.grey,
+									label=channel_data[4],
+									emoji="<:user_icon:877535226694352946>",
+									custom_id="subs-button",
+									disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
+								),
+								Button(
 									style=ButtonStyle.green,
 									label=data[i][4],
 									emoji="<:likes:875659362343993404>",
@@ -1618,8 +1746,73 @@ class Social(commands.Cog):
 							break
 
 					button_id = inter.clicked_button.custom_id
+					
+					if button_id == "subs-button":
+						subs=ast.literal_eval(channel_data[11])
+						if not str(ctx.author.id) in subs:
+							subs.append(str(ctx.author.id))
+		
+							await inter.send(embed=discord.Embed(
+								description=f"{ctx.author.mention} Sub the channel!",
+								color=discord.Color.from_rgb(213, 240, 213)
+							),
+								ephemeral=True
+							)
+			
+							await cur2.execute("UPDATE channel SET subscribers = subscribers + 1 WHERE member_id = ?", (channel_data[0],))
+							await cur2.execute("UPDATE channel SET old_subs = ? WHERE member_id = ?", (str(subs), channel_data[0]))
+							await con2.commit()
+							
+							e=await helper.connect("db/channel.db")
+							e=await helper.cursor(e)
+							await e.execute("SELECT * FROM channel WHERE member_id = 685082846993317953")
+							print(await e.fetchone())
+						
+						await con2.commit()
+						await cur2.close()
+						await con2.close()
 
-					if button_id == "delete-button": #Delete Button
+						await file.edit(
+							content=data[i][0],
+							components=[
+								ActionRow(
+									Button(
+										style=ButtonStyle.blurple,
+										label=data[i][3],
+										emoji="\U0001f465",
+										custom_id="view-button",
+										disabled=True
+									),
+									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4] + 1,
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True
+									),
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][4],
+										emoji="<:likes:875659362343993404>",
+										custom_id="like-button",
+										disabled=True if str(ctx.author.id) in data[i][6] else False
+									),
+									Button(
+										style=ButtonStyle.red,
+										label=data[i][5],
+										emoji="<:dislikes:875659362264309821>",
+										custom_id="dislike-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][7]) else False
+									)
+								)
+							]
+						)
+
+						loop = False
+						__data=await helper.find_in_channel(channel_data[0])
+						print(__data)
+
+					elif button_id == "delete-button": #Delete Button
 						await msg.delete()
 						await file.delete()
 						await ctx.send(embed=discord.Embed(
@@ -1673,6 +1866,13 @@ class Social(commands.Cog):
 										emoji="\U0001f465",
 										custom_id="view-button",
 										disabled=True
+									),
+									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4],
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
 									),
 									Button(
 										style=ButtonStyle.green,
@@ -1738,6 +1938,13 @@ class Social(commands.Cog):
 										emoji="\U0001f465",
 										custom_id="view-button",
 										disabled=True
+									),
+									Button(
+										style=ButtonStyle.grey,
+										label=channel_data[4],
+										emoji="<:user_icon:877535226694352946>",
+										custom_id="subs-button",
+										disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
 									),
 									Button(
 										style=ButtonStyle.green,
@@ -1996,4 +2203,4 @@ class Social(commands.Cog):
 			await db2.close()
 
 def setup(bot):
-	bot.add_cog(Social(bot))
+	bot.add_cog(social(bot))
