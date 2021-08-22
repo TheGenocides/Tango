@@ -13,9 +13,9 @@ config = "^0.5.0"
 Flask = "^2.0.1"
 humanize = "^3.10.0"
 animec = "^0.3.3"
-"dislash.py" = "^1.4.2"
 jishaku = "^2.2.0"
 validators = "^0.18.2"
+"dislash.py" = "^1.4.7"
 
 [tool.poetry.dev-dependencies]
 

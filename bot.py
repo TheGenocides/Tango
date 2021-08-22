@@ -3,6 +3,7 @@ import helper
 import os
 import difflib
 import datetime
+import shutil
 
 #======================
 
@@ -22,16 +23,16 @@ class Tango(commands.Bot):
 			owner_ids=[685082846993317953, 687943803604303872, 806725119917162527]
 		)
 
+
 	async def on_message(self, msg):
-		if msg.mentions:
-			if self.user in msg.mentions and len(msg.content) <= 22:
-				await msg.reply(
-					embed=discord.Embed(
-						description="Hello there, my prefix is `p!`",
-						color=discord.Color.red()
-					)
+		if msg.content == "<@!806725119917162527>":
+			await msg.reply(
+				embed=discord.Embed(
+					description="Hello there, my prefix is `p!`",
+					color=discord.Color.red()
 				)
-		
+			)
+
 		await self.process_commands(msg)
 
 	async def on_ready(self):
@@ -83,7 +84,9 @@ class Tango(commands.Bot):
 					date integer,
 					ID text,
 					old_views text,
-					deleted text
+					deleted text,
+					nsfw text,
+					comments integer
 		)""")
 		await db.commit()
 		await db2.commit()
@@ -168,7 +171,7 @@ class HelpPage(commands.HelpCommand):
 	async def send_bot_help(self, mapping):
 		cog_description={"owner": "These command can only use by one of the owner of the bot.", "fun": "Commands that can be use by all members without any specific permissions or roles.", "social": "Social is a group of commands that contain most of the commands that other can use!", "jishaku": "Jishaku commands", "information": "Commands that have all information that you need about Tango bot"}
 		
-		emojies={"owner": "👑", "fun": "🤡", "social": "🗨️", "jishaku": "⚙️", "information": "🛑"}
+		emojis={"owner": "👑", "fun": "🤡", "social": "🗨️", "jishaku": "⚙️", "information": "🛑"}
 		em=discord.Embed(
 			title="HelpCommand",
 			description="Hello there, im Tango. A fun bot with a social media functions! Gain followers, million of views, and become the most followed channel! Post your meme and messages in community post! Post your video and get ton of review!. All seen across multiple country!\n\n**Select A Category:**",
@@ -179,7 +182,7 @@ class HelpPage(commands.HelpCommand):
 			if att != "No Category" and att != "Jishaku":
 				all_commands=cog.get_commands()
 				em.add_field(
-					name=f"{emojies[att]} {att} [{len(all_commands)}]",
+					name=f"{emojis[att]} {att} [{len(all_commands)}]",
 					value=cog_description[att],
 					inline=False
 				)
@@ -220,14 +223,42 @@ class HelpPage(commands.HelpCommand):
 		channel=self.get_destination()
 		await channel.send(embed=em)
 	
+	async def send_group_help(self, gr):
+		channel=self.get_destination()
+		cmds=list(x.name for x in gr.commands)
+		sig=gr.signature
+		name=gr.qualified_name
+		description={"anime": "For getting info about anime!"}
+		em=discord.Embed(
+			title=name,
+			description=description[name],
+			color=discord.Color.orange()
+		).add_field(
+			name="Syntax",
+			value=f"{self.clean_prefix}{name} {sig}",
+			inline=True
+		).add_field(
+			name="Sub-Commands",
+			value=', '.join([x for x in cmds]),
+			inline=True
+		).set_author(
+			name=f"By {self.context.author}",
+			icon_url=self.context.author.avatar_url
+		).set_footer(
+			text=f"Use p!help {name} [Sub-Commands] for more info about the Sub-Commands",
+			icon_url=self.context.author.avatar_url
+		)
+		
+		await channel.send(embed=em)
+
 	async def send_command_help(self, command):
 		channel=self.get_destination()
-		desc=getattr(command, 'description', "This command dont have a description")
-		aliases=getattr(command, "aliases", "This command dont have aliases")
+		desc=command.description
+		aliases=command.aliases
+
 		if aliases == []:
 			aliases.append("This command dont have aliases")
-		
-
+	
 		em=discord.Embed(
 			title=command.name,
 			description=desc,
@@ -299,9 +330,16 @@ class HelpPage(commands.HelpCommand):
 
 	async def send_error_message(self, error):
 		channel = self.get_destination()
-		commands=['uptime', 'ping', 'idea', 'info', "start", "channel", "post", "videos", "search", "setting"]
+		commands=['uptime', 'ping', 'idea', 'info', "start", "channel", "post", "videos", "search", "setting", "anime", "view", "profile", "login", "logout"]
+		error=''
+		if not error.lower():
+			error=error
+
 		possi=difflib.get_close_matches(error.lower(), commands)
+
 		category=difflib.get_close_matches(error.title(), ["Owner", "Fun", "Social", "Information"])
+
+
 		if possi or category:
 			return
 		embed = discord.Embed(
@@ -485,7 +523,7 @@ async def help(inter):
 
 	categories=["Owner", "Fun", "Social", "Information"]
 		
-	emojies={"Owner": "👑", "Fun": "🤡", "Social": "🗨️", "Jishaku": "⚙️", "Information": "🛑"}
+	emojis={"Owner": "👑", "Fun": "🤡", "Social": "🗨️", "Jishaku": "⚙️", "Information": "🛑"}
 
 	num_commands={"Owner": "4", "Fun": "2", "Social": "6", "Jishaku": "1", "Information": "2"}
 
@@ -497,7 +535,7 @@ async def help(inter):
 	
 	for x in categories:
 		em.add_field(
-			name=f"{emojies[x]} {x} [{num_commands[x]}]",
+			name=f"{emojis[x]} {x} [{num_commands[x]}]",
 			value=cog_description[x],
 			inline=False
 		)

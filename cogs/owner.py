@@ -3,6 +3,7 @@ import datetime
 import os
 import sys
 import traceback
+import helper
 
 from discord.ext import commands
 
@@ -10,6 +11,41 @@ class owner(commands.Cog):
 	"""Only owner can use these commands"""
 	def __init__(self, bot):
 		self.bot = bot
+
+	@commands.command()
+	@commands.is_owner()
+	async def delete(self, ctx):
+		con=await helper.connect('db/channel.db')
+		con2=await helper.connect('db/info.db')
+		cur=await helper.cursor(con)
+		cur2=await helper.cursor(con2)
+
+		await cur.execute("DELETE FROM channel WHERE member_id = ?", (ctx.author.id,))
+		await cur2.execute("DELETE FROM info WHERE member_id = ?", (ctx.author.id,))
+
+		await con.commit()
+		await con2.commit()
+		await cur.close()
+		await cur2.close()
+		await con.close()
+		await con2.close()
+	
+ 
+	@commands.command()
+	@commands.is_owner()
+	async def set_video(self, ctx):
+		con=await helper.connect("db/channel.db")
+		cur=await helper.cursor(con)
+
+
+		await cur.execute("UPDATE channel SET videos = 0 WHERE member_id = 803589112874401793")
+		await cur.execute("UPDATE channel SET subscribers = 0 WHERE member_id = 685082846993317953")
+		await cur.execute("UPDATE channel SET videos = 0 WHERE member_id = 803589112874401793")
+		await cur.execute("UPDATE channel SET views = 0 WHERE member_id = 803589112874401793")
+
+		await con.commit()
+		await cur.close()
+		await con.close()
 
 
 	@commands.command("ss", hidden=True)
@@ -27,23 +63,18 @@ class owner(commands.Cog):
 	@commands.is_owner()
 	async def _reboot(self, ctx):
 		try:
-			channel=ctx.channel
-			await ctx.send("Rebooting")
-			await channel.send(f"Im Online ;) {ctx.author.mention} in 3 seconds")
+			if self.bot.processing_commands > 1:
+				await ctx.send("I cant reboot right now because someone still using my command!")
+				return
+
+			await ctx.send(f"Rebooting: Im Online ;) {ctx.author.mention} in 3 seconds")
 			await self.bot.close()
 			os.execv(sys.executable, ["python"] + sys.argv)
 		except Exception as e:
 			tb = "".join(traceback.format_exception(type(e), e, e.__traceback__))
 			await ctx.send(f"```py\n{tb}\n```")
 
-	@commands.command('logout', description="Shutdown the entire bot system", aliases=['shutdown'])
-	@commands.is_owner()
-	async def _logout(self, ctx):
-		await ctx.send(embed=discord.Embed(
-			description="Logging out...",
-			color=discord.Color.blurple()
-		))
-		await self.bot.close()
+
 		
 	@commands.command('reload', description="Reload an extension", aliases=['re'])
 	@commands.is_owner()

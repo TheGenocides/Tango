@@ -4,7 +4,6 @@ import helper
 import time
 import datetime
 import ast
-import validators
 import requests
 
 #===============================
@@ -19,7 +18,7 @@ class social(commands.Cog):
 		self.bot = bot
 		self.special_chars = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`"]
 		self.channel_error = discord.Embed(
-			description="You haven't made your channel, Use p!start command!",
+			description="You haven't made your channel, Use `p!start` command!",
 			color=discord.Color.red()
 		)
 
@@ -29,14 +28,27 @@ class social(commands.Cog):
 			text="You havent made a video, use p!post command!"
 		)
 
+		self.login_error=discord.Embed(
+			description="Use `p!login` command to login to you your account!",
+			color=discord.Color.red()
+		)
 
 
-	@commands.command("profile", description="Select menu for age :p")
+	@commands.Cog.listener()
+	async def on_command(self, ctx):
+		print(self.bot.processing_commands)
+
+	@commands.command("profile", description="Profile command can let you see your channel stats!")
 	async def _profile(self, ctx):
 		data=await helper.find_in_channel(ctx.author.id)
 		info=await helper.find_in_info(ctx.author.id)
+
 		if not data or not info:
 			await ctx.send(embed=self.channel_error)
+			return
+
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
 			return
 
 		await ctx.send(
@@ -101,19 +113,23 @@ class social(commands.Cog):
 		cur=await helper.cursor(db)	
 		cur2=await helper.cursor(db2) 
 		channel_data=await helper.find_in_channel(ctx.author.id)
+		info=await helper.find_in_info(ctx.author.id)
 
 		buttons = ActionRow(
 			Button(
 				style=ButtonStyle.green,
+				label="Continue",
 				emoji="<:tick_yes:874284510135607350>",
 				custom_id="green"
 			),
 			Button(
 				style=ButtonStyle.red,
+				label="Abort",
 				emoji="<:tick_no:874284510575996968>",
 				custom_id="red"
 			)
 		)
+		print(channel_data)
 
 		if channel_data != None:
 			await ctx.send(embed=discord.Embed(
@@ -122,9 +138,13 @@ class social(commands.Cog):
 			))
 			return
 
+		if info != None and info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
+
 		embed_message=await ctx.send(embed=discord.Embed(
 			title="Time to get start!!",
-			description="Hello There 👋\nYou have 1 to 5 steps to make your TangoBot account, you can always press abort button to cancel the command! Click the green button to continues or click red button to cancel this command. The bot will guide the rest",
+			description="Hello There 👋\nYou have 1 to 5 steps to make your TangoBot account, you can always press abort button to cancel the command! Click the green button to continues or click red button to cancel this command. The bot will guide you through the rest",
 			color=discord.Color.from_rgb(213, 240, 213)
 		), components=[
 				buttons
@@ -137,7 +157,7 @@ class social(commands.Cog):
 		@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
 		async def _not_from_author(inter):
 			await inter.reply(
-				type=ResponseType.ChannelMessageWithSource,
+				
 				embed=discord.Embed(
 					description="You are not the member who use this command!",
 					color=discord.Color.red()
@@ -148,10 +168,9 @@ class social(commands.Cog):
 		
 		@on_click.matching_id("red")
 		async def _red(inter):
-			await inter.reply(
-				type=7,
-				embed=discord.Embed(
-				description="Aborting",
+			await embed_message.delete()
+			await ctx.send(embed=discord.Embed(
+				description="Aborting...",
 				color=discord.Color.red()
 			))
 
@@ -164,319 +183,353 @@ class social(commands.Cog):
 			try:
 				#Channel Name 
 				message=await inter.reply(
-					type=ResponseType.ChannelMessageWithSource,
 					embed=discord.Embed(
 					title="Step 1",
-					description="Type your channel name without special chars! Minimum of 3 to 13 characters!",
+					description="Type your channel name without special chars! Minimum of 5 to 15 characters!",
 					color=discord.Color.from_rgb(213, 240, 213)
-				).set_footer(
-					text="Type abort to decline this command"
-				))
+				), components=[
+					
+				])
+				
 				msg=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
 				
 				if msg.content.lower() == "abort":
+					await message.delete()
 					await ctx.send(embed=discord.Embed(
-						description="Aborting",
+						description="Aborting...",
 						color=discord.Color.red()
 					))
 					on_click.kill()
 					return
 
-				else:
-					for x in self.special_chars:
-						if x in msg.content:
-							await ctx.send(embed=discord.Embed(
-								description="Dont put special chars in channel name!",
-								color=discord.Color.red()
-							))
-							on_click.kill()
-							return 
-
-					if len(msg.content) > 13 or len(msg.content) < 3:
+				for x in self.special_chars:
+					if x in msg.content:
 						await ctx.send(embed=discord.Embed(
-							description="You put too much or too little characters!",
-							color=discord.Color.red()
-						))
-						on_click.kill()
-						return
-
-
-					
-					#Select Gender
-					embed = await message.edit(embed=discord.Embed(
-						title="Step 2",
-						description="Select your gender with the dropdown below this embed!\nWe have Male, Female, and NonBinary",
-						color=discord.Color.from_rgb(213, 240, 213)
-					), components=[
-							SelectMenu(
-								custom_id="Gender",
-								placeholder="Choose your gender!",
-								max_values=1,
-								options=[
-									SelectOption("Male", "value 1", emoji="\U00002642", description="A Male Gender Option"),
-									SelectOption("Female", "value 2", emoji="\U00002640", description="A Female Gender Option"),
-									SelectOption("NonBinary", "value 3", emoji="\U00002b1c", description="A Nonbinary option")
-								]
-							)
-						]
-					)		
-
-					while True:
-						inter = await embed.wait_for_dropdown(check=lambda inter: inter.author == ctx.author)
-						if inter.author != ctx.author:
-							await inter.reply(embed=discord.Embed(
-								description="You are not the member who use this command!",
-								color=discord.Color.red()
-							), 
-								ephemeral=True
-							)
-							
-						
-						else:
-							break
-						
-					label = "".join([option.label for option in inter.select_menu.selected_options])
-					await inter.reply(f"You choose **{label}**")
-					await asyncio.sleep(2)
-
-					#Select email
-					await message.edit(embed=discord.Embed(
-						title="Step 3",
-						description="Enter your email name, enter your email without any special chars! (e.g EpicUser123, DiscordUser321) You need a minimum of 5 to 13 characters",
-						color=discord.Color.from_rgb(213, 240, 213)
-					))
-					email=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
-
-					if email.content.lower() == "abort":
-						await ctx.send(embed=discord.Embed(
-						description="Aborting",
-						color=discord.Color.red()
-					))
-						on_click.kill()
-						return
-
-					for x in self.special_chars:
-						if x in email.content:
-							await ctx.send(embed=discord.Embed(
-								description="Dont put special chars in email name!",
-								color=discord.Color.red()
-							))
-							on_click.kill()
-							return 
-
-					if len(email.content) > 15 or len(email.content) < 5:
-						await ctx.send(embed=discord.Embed(
-							description="You put too much or too little characters!",
-							color=discord.Color.red()
-						))
-						on_click.kill()
-						return
-
-					email=f"{email.content}@email.com"
-					await ctx.send(f"Your email is {email}")
-					await asyncio.sleep(2)
-
-					#Select Password
-					await ctx.send(f"{ctx.author.mention} Check your DM!")
-					await ctx.author.send(embed=discord.Embed(
-						title="Step 4",
-						description="DM me your password! You need a minimum of 5 to 15 characters",
-						color=discord.Color.from_rgb(213, 240, 213)
-					))
-					password=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel))
-					
-					if password.content.lower() == "abort":
-						await ctx.send(embed=discord.Embed(
-						description="Aborting",
-						color=discord.Color.red()
-					))
-						on_click.kill()
-						return
-
-					for x in self.special_chars:
-						if x in msg.content:
-							await ctx.author.send(embed=discord.Embed(
-								description="Dont put special chars in password!",
-								color=discord.Color.red()
-							))
-							on_click.kill()
-							return
-
-					if len(password.content) > 15 or len(password.content) < 5:
-						await ctx.author.send(embed=discord.Embed(
-							description="You put too much or too little characters!",
+							description="Dont put special chars in channel name!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
 						return 
 
-					await ctx.author.send(f"Your password is ||{password.content}|| Continue to {ctx.channel.mention}!")
-					
+				if len(msg.content) > 15 or len(msg.content) < 5:
+					await ctx.send(embed=discord.Embed(
+						description="You put too much or too little characters!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
 
-					confirm=await ctx.send(
-						f"**Little bit more!**\n{ctx.author.mention} You just need to confirm all of your credentials. We(TangoBot devs) respect all of your privacy, For your information we are only gonna store your Member-ID and your Tango bot account password which is bind to your ID!\nPlease click the green button to continue or the red button to decline this!",
-						embed=discord.Embed(
-						title="<a:moving_gear:874897860469088296> Profile",
-						description="<a:moving_gear:874897860469088296> Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!",
-						color=discord.Color.from_rgb(213, 240, 213),
-						timestamp=ctx.message.created_at
-					).set_author(
-						name=f"{ctx.author.name} (@{msg.content})",
-						icon_url=ctx.author.avatar_url
-					).set_footer(
-						text=f"Source: @{msg.content} | ID: {ctx.author.id}",
-						icon_url=ctx.author.avatar_url
-					).add_field(
-						name="<:follow:875659362264309791> Subs",
-						value=0
-					).add_field(
-						name="<:blurple_camera:875659362331394058> Videos",
-						value=0
-					).add_field(
-						name="🫂 Views",
-						value=0
-					).add_field(
-						name="<:likes:875659362343993404> Likes",
-						value=0
-					).add_field(
-						name="<:dislikes:875659362264309821> Dislikes",
-						value=0
-					).add_field(
-						name="\u200b",
-						value="\u200b"
-					).add_field(
-						name="Account Information",
-						value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using p!set command!",
-						inline=False
-					).add_field(
-						name="🫂 Gender",
-						value=label
-					).add_field(
-						name="📧 email",
-						value=email
-					).add_field(
-						name="🔑 Password",
-						value="||Password Redacted||",
-						inline=False
-					).add_field(
-						name="⌛ Account Age",
-						value=f"<t:{int(age)}:F>"
-					),
-					components=[
-						buttons
-					]
-				)
-					on_click=confirm.create_click_listener(timeout=120.0)
-					
-					@on_click.not_from_user(ctx.author, cancel_others=True)
-					async def _not_From_user(inter):
-						await inter.reply(
-							type=ResponseType.ChannelMessageWithSource,
-							embed=discord.Embed(
-								description="You are not the member who use this command!",
-								color=discord.Color.red()
-							), 
-								ephemeral=True
-							)
+				await cur.execute("SELECT member_id FROM channel WHERE channel = ?", (msg.content,))
+				acc=await cur.fetchone()
 
-					@on_click.matching_id("green")
-					async def _Green(inter):
-						await cur.execute("INSERT INTO channel VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, msg.content, "Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!", str(ctx.author.avatar_url), 0, 0, 0, 0, 0, "no", 0, f'["{ctx.author.id}"]'))
-						await cur2.execute("INSERT INTO info VALUES (?, ?, ?, ?, ?, ?)", (ctx.author.id, label, "yes", email, password.content, f"<t:{int(age)}:F>"))
-						await db.commit()
-						await db2.commit()
-						await inter.reply(
-							"**Done**\nYou made your account! Now use the `p!help Social` for all commands regarding Social Media!",
-							type=ResponseType.UpdateMessage,
-							embed=discord.Embed(
-								title="<a:moving_gear:874897860469088296> Profile",
-								description="<a:moving_gear:874897860469088296> Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!",
-								color=discord.Color.from_rgb(213, 240, 213),
-								timestamp=ctx.message.created_at
-							).set_author(
-								name=f"{ctx.author.name} (@{msg.content})",
-								icon_url=ctx.author.avatar_url
-							).set_footer(
-								text=f"Source: @{msg.content} | ID: {ctx.author.id}",
-								icon_url=ctx.author.avatar_url
-							).add_field(
-								name="<:follow:875659362264309791> Subs",
-								value=0
-							).add_field(
-								name="<:blurple_camera:875659362331394058> Videos",
-								value=0
-							).add_field(
-								name="🫂 Views",
-								value=0
-							).add_field(
-								name="<:likes:875659362343993404> Likes",
-								value=0
-							).add_field(
-								name="<:dislikes:875659362264309821> Dislikes",
-								value=0
-							).add_field(
-								name="\u200b",
-								value="\u200b"
-							).add_field(
-								name="Account Information",
-								value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using p!set command!",
-								inline=False
-							).add_field(
-								name="🫂 Gender",
-								value=label
-							).add_field(
-								name="📧 email",
-								value=email
-							).add_field(
-								name="🔑 Password",
-								value="||Password Redacted||",
-								inline=False
-							).add_field(
-								name="⌛ Account Age",
-								value=f"<t:{int(age)}:F>"
-							),
-							components=[
-								
+				if acc != None:
+					await ctx.send(embed=discord.Embed(
+						description="That name is already available! next time enter a different name!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+				
+				#Select Gender
+				await message.edit(
+					embed=discord.Embed(
+					title="Step 2",
+					description="Select your gender with the dropdown below this embed!\nWe have Male, Female, and NonBinary",
+					color=discord.Color.from_rgb(213, 240, 213)
+				), components=[
+						SelectMenu(
+							custom_id="Gender",
+							placeholder="Choose your gender!",
+							max_values=1,
+							options=[
+								SelectOption("Male", "value 1", emoji="\U00002642", description="A Male Gender Option"),
+								SelectOption("Female", "value 2", emoji="\U00002640", description="A Female Gender Option"),
+								SelectOption("NonBinary", "value 3", emoji="\U00002b1c", description="A Nonbinary option")
 							]
 						)
-						await inter.reply(
-							ctx.author.mention,
-							type=ResponseType.ChannelMessageWithSource, 
-							embed=discord.Embed(
-								title="Congratulation!",
-								description=f"{ctx.author.mention}, your account was made! Please use the help command to see the help menu!",
-								color=discord.Color.from_rgb(213, 240, 213)
-							)
-						)
-						await cur.close()
-						await cur2.close()
-						await db.close()
-						await db2.close()
-						on_click.kill()
+					]
+				)		
 
-					@on_click.matching_id("red")
-					async def _Red(inter):
-						await inter.reply(
-							embed=discord.Embed(
-							description="Aborting",
+				while True:
+					inter = await message.wait_for_dropdown(check=lambda inter: inter.author == ctx.author)
+					if inter.author != ctx.author:
+						await inter.reply(embed=discord.Embed(
+							description="You are not the member who use this command!",
+							color=discord.Color.red()
+						), 
+							ephemeral=True
+						)
+						
+					
+					else:
+						break
+					
+				label = "".join([option.label for option in inter.select_menu.selected_options])
+				await inter.reply(f"You choose **{label}**")
+				await asyncio.sleep(2)
+
+				#Select email
+				await message.reply(
+					embed=discord.Embed(
+					title="Step 3",
+					description="Enter your email name, enter your email without any special chars! (e.g EpicUser123, DiscordUser321) You need a minimum of 5 to 15 characters",
+					color=discord.Color.from_rgb(213, 240, 213)
+				),  components=[])
+				email=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
+
+				if email.content.lower() == "abort":
+					await message.delete()
+					await message.edit(
+						embed=discord.Embed(
+							description="Aborting...",
+							color=discord.Color.red()
+				))	
+					on_click.kill()
+					return
+
+				for x in self.special_chars:
+					if x in email.content:
+						await message.delete()
+						await ctx.send(embed=discord.Embed(
+							description="Dont put special chars in email name!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
-					
+						return 
 
-					@on_click.timeout
-					async def _on_timeout():
-						await confirm.delete()
-						await ctx.send(
-							ctx.author.mention,
-							embed=discord.Embed(
-								title="Timeout!",
-								description="I have stop the command due to its long activity!",
-								color=discord.Color.red()
-							)
-						)
+				if len(email.content) > 15 or len(email.content) < 5:
+					await message.delete()
+					await ctx.send(embed=discord.Embed(
+						description="You put too much or too little characters!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+
+				email=f"{email.content}@email.com"
 				
+				await cur2.execute("SELECT member_id FROM info WHERE email = ?", (email,))
+				acc=await cur.fetchone()
+				
+				if acc != None:
+					await ctx.send(embed=discord.Embed(
+						description="That email is already available! next time enter a different name!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+
+				await ctx.send(f"Your email is {email}")
+				await asyncio.sleep(2)
+
+				#Select Password
+				await ctx.send(f"{ctx.author.mention} Check your DM!")
+				await ctx.author.send(embed=discord.Embed(
+					title="Step 4",
+					description="DM me your password! You need a minimum of 5 to 15 characters",
+					color=discord.Color.from_rgb(213, 240, 213)
+				))
+
+				password=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel))
+				
+				if password.content.lower() == "abort":
+					await message.delete()
+					await ctx.author.send(
+						embed=discord.Embed(
+							description="Aborting...",
+							color=discord.Color.red()
+				))	
+					on_click.kill()
+					return
+
+				for x in self.special_chars:
+					if x in msg.content:
+						await message.delete()
+						await ctx.author.send(embed=discord.Embed(
+							description="Dont put special chars in password!",
+							color=discord.Color.red()
+						))
+						on_click.kill()
+						return
+
+				if len(password.content) > 15 or len(password.content) < 5:
+					await message.delete()
+					await ctx.author.send(embed=discord.Embed(
+						description="You put too much or too little characters!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return 
+
+				await ctx.author.send(f"Your password is ||{password.content}|| Continue to {ctx.channel.mention}!")
+
+				confirm=await inter.reply(
+					f"**Little bit more!**\n{ctx.author.mention} You just need to confirm all of your credentials. We(TangoBot devs) respect all of your privacy, For your information we are only gonna store your Member-ID and your Tango bot account password which is bind to your ID!\nPlease click the green button to continue or the red button to decline this!",
+					type=7,
+					embed=discord.Embed(
+					title="<a:moving_gear:874897860469088296> Profile",
+					description="<a:moving_gear:874897860469088296> Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!",
+					color=discord.Color.from_rgb(213, 240, 213),
+					timestamp=ctx.message.created_at
+				).set_author(
+					name=f"{ctx.author.name} (@{msg.content})",
+					icon_url=ctx.author.avatar_url
+				).set_footer(
+					text=f"Source: @{msg.content} | ID: {ctx.author.id}",
+					icon_url=ctx.author.avatar_url
+				).add_field(
+					name="<:follow:875659362264309791> Subs",
+					value=0
+				).add_field(
+					name="<:blurple_camera:875659362331394058> Videos",
+					value=0
+				).add_field(
+					name="🫂 Views",
+					value=0
+				).add_field(
+					name="<:likes:875659362343993404> Likes",
+					value=0
+				).add_field(
+					name="<:dislikes:875659362264309821> Dislikes",
+					value=0
+				).add_field(
+					name="\u200b",
+					value="\u200b"
+				).add_field(
+					name="Account Information",
+					value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using p!set command!",
+					inline=False
+				).add_field(
+					name="🫂 Gender",
+					value=label
+				).add_field(
+					name="📧 email",
+					value=email
+				).add_field(
+					name="🔑 Password",
+					value="||[Password Redacted]||",
+					inline=False
+				).add_field(
+					name="⌛ Account Age",
+					value=f"<t:{int(age)}:F>"
+				),
+				components=[
+					buttons
+				]
+			)
+				on_click=confirm.create_click_listener(timeout=120.0)
+				
+				@on_click.not_from_user(ctx.author, cancel_others=True)
+				async def _not_From_user(inter):
+					await inter.reply(
+						embed=discord.Embed(
+							description="You are not the member who use this command!",
+							color=discord.Color.red()
+						), 
+							ephemeral=True
+						)
+
+				@on_click.matching_id("green")
+				async def _Green(inter):
+					await cur.execute("INSERT INTO channel VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, msg.content, "Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!", str(ctx.author.avatar_url), 0, 0, 0, 0, 0, "no", 0, f'["{ctx.author.id}"]'))
+					await cur2.execute("INSERT INTO info VALUES (?, ?, ?, ?, ?, ?)", (ctx.author.id, label, "no", email, password.content, f"<t:{int(age)}:F>"))
+					await db.commit()
+					await db2.commit()
+					await inter.reply(
+						"**Done**\nYou made your account! Now use the `p!login` command to get access to your account!",
+						type=7,
+						embed=discord.Embed(
+							title="<a:moving_gear:874897860469088296> Profile",
+							description="<a:moving_gear:874897860469088296> Set a new description, banner, using p!set command! also you can change channel name, email, password, and gender so dont you worry!",
+							color=discord.Color.from_rgb(213, 240, 213),
+							timestamp=ctx.message.created_at
+						).set_author(
+							name=f"{ctx.author.name} (@{msg.content})",
+							icon_url=ctx.author.avatar_url
+						).set_footer(
+							text=f"Source: @{msg.content} | ID: {ctx.author.id}",
+							icon_url=ctx.author.avatar_url
+						).add_field(
+							name="<:follow:875659362264309791> Subs",
+							value=0
+						).add_field(
+							name="<:blurple_camera:875659362331394058> Videos",
+							value=0
+						).add_field(
+							name="🫂 Views",
+							value=0
+						).add_field(
+							name="<:likes:875659362343993404> Likes",
+							value=0
+						).add_field(
+							name="<:dislikes:875659362264309821> Dislikes",
+							value=0
+						).add_field(
+							name="\u200b",
+							value="\u200b"
+						).add_field(
+							name="Account Information",
+							value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using p!set command!",
+							inline=False
+						).add_field(
+							name="🫂 Gender",
+							value=label
+						).add_field(
+							name="📧 email",
+							value=email
+						).add_field(
+							name="🔑 Password",
+							value="||[Password Redacted]||",
+							inline=False
+						).add_field(
+							name="⌛ Account Age",
+							value=f"<t:{int(age)}:F>"
+						),
+						components=[
+							
+						]
+					)
+					await inter.reply(
+						ctx.author.mention,
+						embed=discord.Embed(
+							title="Congratulation!",
+							description=f"{ctx.author.mention}, your account was made! Please use the help command to see the help menu!",
+							color=discord.Color.from_rgb(213, 240, 213)
+						)
+					)
+					await cur.close()
+					await cur2.close()
+					await db.close()
+					await db2.close()
+					on_click.kill()
+
+				@on_click.matching_id("red")
+				async def _Red(inter):
+					await message.delete()
+					await inter.reply(
+						type=7,
+						content="Aborting...",
+						embed=discord.Embed(
+						description="Aborting...",
+						color=discord.Color.red()
+					),  components=[])
+					on_click.kill()
+					
+				
+
+				@on_click.timeout
+				async def _on_timeout():
+					await confirm.delete()
+					await ctx.send(
+						ctx.author.mention,
+						embed=discord.Embed(
+							title="Timeout!",
+							description="I have stop the command due to its long activity!",
+							color=discord.Color.red()
+						)
+					)
 			
+		
 			except (discord.ext.commands.errors.CommandInvokeError, asyncio.TimeoutError) as e:
 				if e == commands.errors.CommandInvokeError:
 					await ctx.send(
@@ -509,7 +562,7 @@ class social(commands.Cog):
 				)
 			)
 		
-	@commands.command("post",  description="Post a video!")
+	@commands.command("post",  description="Post a video!", aliases=['upload'])
 	async def _post(self, ctx):
 		# if not ctx.author.id in self.bot.owner_ids:
 		# 	await ctx.send(
@@ -520,7 +573,17 @@ class social(commands.Cog):
 		# 	)
 			
 		# 	return
+		info = await helper.find_in_info(ctx.author.id)
+		acc=await helper.find_in_channel(ctx.author.id)
+		 
+		if not acc or not info:
+			await ctx.send(embed=self.channel_error)
+			return
 
+		
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
 		try:
 			cur=await helper.find_in_channel(ctx.author.id)
 			if cur:
@@ -564,7 +627,7 @@ class social(commands.Cog):
 					)
 				)
 
-				descriptions=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
+				descriptions=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=120.0)
 				description=descriptions.content
 
 				try:
@@ -587,6 +650,33 @@ class social(commands.Cog):
 						text="Description must have 1 to 256 characters"
 					))
 					return
+				
+				await ctx.send(embed=discord.Embed(
+					title="Nsfw?",
+					color=discord.Color.from_rgb(213, 240, 213)
+				).set_footer(
+					text="Type `y` if it is, else type `n`"
+				).set_author(
+					name=ctx.author,
+					icon_url=ctx.author.avatar_url
+					)
+				)
+
+				nsfw=await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author and msg.channel == ctx.channel, timeout=120.0)
+				
+				if not nsfw.content.lower() in ['y', 'n']:
+					await ctx.send(embed=discord.Embed(
+						description=f"You need to enter `y` or `n`. Not {nsfw.content}",
+						color=discord.Color.red()
+					))
+					return
+				
+				elif nsfw.content.lower() == 'y' and not nsfw.channel.is_nsfw():
+					await ctx.send(embed=discord.Embed(
+						description="You can only post nsfw video in nsfw channels!",
+						color=discord.Color.red()
+					))
+					return
 
 				await ctx.send(embed=discord.Embed(
 					title="Attachment?",
@@ -599,7 +689,7 @@ class social(commands.Cog):
 					)
 				)
 
-				attach=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
+				attach=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=120.0)
 				con=await helper.connect("db/channel.db")
 				cur=await helper.cursor(con)
 				await cur.execute("SELECT channel FROM channel WHERE member_id=?", (ctx.author.id,))
@@ -636,7 +726,7 @@ class social(commands.Cog):
 							await em.edit(content="Are you sure you want to post this video?\nClick the green button to post this video or click the red button to cancelled this process!", embed=discord.Embed(
 								title=title.content,
 								url=x,
-								description=description if len(description) > 1 else "This video dont have a description",
+								description=description if len(description) > 1 else "",
 								color=discord.Color.from_rgb(213, 240, 213)
 							).set_footer(
 								text=f"Source : @{source[0]} | Date: {datetime.datetime.utcnow().strftime('%m/%d/%Y')} | ID: {token}"
@@ -660,11 +750,13 @@ class social(commands.Cog):
 								ActionRow(
 									Button(
 										style=ButtonStyle.green,
-										emoji="\U00002705",
+										label="Continue",
+										emoji="<:tick_yes:875659362117488671>",
 										custom_id="green"
 									),
 									Button(
 										style=ButtonStyle.red,
+										label="Abort",										
 										emoji="<:tick_no:874284510575996968>",
 										custom_id="red"
 										)
@@ -677,7 +769,7 @@ class social(commands.Cog):
 
 							on_click = em.create_click_listener(timeout=120.0) 
 							
-							@on_click.not_from_user(ctx.author, reset_timeout=True)
+							@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
 							async def on_wrong_user(inter):
 								await inter.reply(
 									embed=discord.Embed(
@@ -695,7 +787,7 @@ class social(commands.Cog):
 								date_=int(time.time())
 								con=await helper.connect("db/video.db")
 								cur=await helper.cursor(con)
-								await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(x), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', x.content_type, date_, token, f'["{ctx.author.id}"]', "False"))
+								await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(x), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', x.content_type, date_, token, f'["{ctx.author.id}"]', "False", nsfw.content, 0))
 								await con.commit()
 								await cur.close()
 								await con.close()
@@ -716,7 +808,7 @@ class social(commands.Cog):
 									embed=discord.Embed(
 									title=title.content,
 									url=x,
-									description=description if len(description) > 1 else f"Posted date: <t:{date_}:d>",
+									description=description if len(description) > 1 else "",
 									color=discord.Color.from_rgb(213, 240, 213)
 									).set_footer(
 										text=f"Source : @{source[0]} | {ctx.author}"
@@ -750,7 +842,7 @@ class social(commands.Cog):
 									embed=discord.Embed(
 										title=title.content,
 										url=x,
-										description=description if len(description) > 1 else "This video dont have a description",
+										description=description if len(description) > 1 else "",
 										color=discord.Color.from_rgb(213, 240, 213)
 										).set_footer(
 											text=f"Source : @{source[0]} | {ctx.author}"
@@ -794,7 +886,7 @@ class social(commands.Cog):
 						await ctx.send(embed=discord.Embed(
 								color=discord.Color.red()
 							).set_footer(
-								text="The URL is invalid :/\nTangoBot support: mp3/mp4/gif for gif only tenor and giphy are compatible!"
+								text="We dont support that url/attachments at the moment!"
 						))	
 						return
 
@@ -829,11 +921,13 @@ class social(commands.Cog):
 							ActionRow(
 								Button(
 									style=ButtonStyle.green,
-									emoji="\U00002705",
+									label="Continue",
+									emoji="<:tick_yes:875659362117488671>",
 									custom_id="green"
 								),
 								Button(
 									style=ButtonStyle.red,
+									label="Abort",
 									emoji="<:tick_no:874284510575996968>",
 									custom_id="red"
 								)
@@ -844,7 +938,7 @@ class social(commands.Cog):
 					await ctx.send(attach.content)
 					on_click = em.create_click_listener(timeout=120.0) 
 							
-					@on_click.not_from_user(ctx.author, reset_timeout=True)
+					@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
 					async def on_wrong_user(inter):
 						await inter.reply(
 							embed=discord.Embed(
@@ -862,7 +956,7 @@ class social(commands.Cog):
 						date_=int(time.time())
 						con=await helper.connect("db/video.db")
 						cur=await helper.cursor(con)
-						await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(attach.content), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', "link", date_, token, f'["{ctx.author.id}"]', "False"))
+						await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(attach.content), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', "link", date_, token, f'["{ctx.author.id}"]', "False", nsfw.content, 0))
 						await con.commit()
 						await cur.close()
 						await con.close()
@@ -961,8 +1055,14 @@ class social(commands.Cog):
 	async def _videos(self, ctx):
 		data=await helper.find_in_video(ctx.author.id, mode="all")
 		channel_data=await helper.find_in_channel(ctx.author.id)
+		info = await helper.find_in_info(ctx.author.id)
+		print(data)
 		if not channel_data:
 			await ctx.send(embed=self.channel_error)
+			return
+		
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
 			return
 
 		if not data:
@@ -1043,14 +1143,14 @@ class social(commands.Cog):
 							), 
 							Button(
 								style=ButtonStyle.green,
-								label=data[i][4],
+								label=data[i][5],
 								emoji="<:likes:875659362343993404>",
 								custom_id="like-button",
 								disabled=True
 							),
 							Button(
 								style=ButtonStyle.red,
-								label=data[i][5],
+								label=data[i][6],
 								emoji="<:dislikes:875659362264309821>",
 								custom_id="dislike-button",
 								disabled=True
@@ -1210,18 +1310,77 @@ class social(commands.Cog):
 					]
 				)		
 
-	@commands.command()
-	@commands.is_owner()
-	async def set_video(self, ctx):
-		con=await helper.connect("db/channel.db")
+	@commands.command("view", description="View a video with its ID")
+	async def _view(self, ctx, *,video_ID):
+		con=await helper.connect('db/video.db')
 		cur=await helper.cursor(con)
-
-		await cur.execute("UPDATE channel SET subscribers = 0 WHERE member_id = ?", (ctx.author.id,))
-		await cur.execute("UPDATE channel SET old_subs = ? WHERE member_id = ?", (f'["{ctx.author.id}"]', ctx.author.id))
-
-		await con.commit()
+		await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,)) 
+		data=await cur.fetchone()
+		if not data:
+			await ctx.send(embed=discord.Embed(
+				description="You put a wrong video ID!"
+			))
+		channel_data=await helper.find_in_channel(data[0])
+		user=await self.bot.fetch_user(data[0])
 		await cur.close()
 		await con.close()
+
+		raw_date=datetime.datetime.fromtimestamp(int(data[10]))
+		date_time=raw_date.strftime("%m/%d/%Y")	
+		await ctx.send(embed=discord.Embed(
+			title=data[1],
+			url=data[3],
+			description=data[2],
+			color=discord.Color.from_rgb(213, 240, 213)
+		).set_author(
+			name=f"{user.name} (@{channel_data[1]})",
+			icon_url=channel_data[3]
+		).set_footer(
+			text=f"Data: {data[10]} | ID: {data[11]}",
+			icon_url=channel_data[3]
+		))
+		await ctx.send(
+			data[3],
+			components=[
+				ActionRow(
+					Button(
+						style=ButtonStyle.blurple,
+						label=data[4],
+						emoji="\U0001f465",
+						custom_id="view-button",
+						disabled=True
+					),
+					Button(
+						style=ButtonStyle.grey,
+						label=channel_data[4],
+						emoji="<:user_icon:877535226694352946>",
+						custom_id="subs-button",
+						disabled=True
+					), 
+					Button(
+						style=ButtonStyle.green,
+						label=data[5],
+						emoji="<:likes:875659362343993404>",
+						custom_id="like-button",
+						disabled=True
+					),
+					Button(
+						style=ButtonStyle.red,
+						label=data[6],
+						emoji="<:dislikes:875659362264309821>",
+						custom_id="dislike-button",
+						disabled=True
+					),
+					Button(
+						style=ButtonStyle.grey,
+						label=date_time,
+						emoji="\U0000231b",
+						custom_id="time-button",
+						disabled=True
+					)
+				)
+			]
+		)
 			
 	@commands.command("search", description="Search up videos that got posted by other members!")
 	async def _search(self, ctx, *,name):
@@ -1982,13 +2141,19 @@ class social(commands.Cog):
 	
 	@commands.command("setting", description="Setting up your channel and profile info", aliases=['set'])
 	async def _setting(self, ctx):
+		
 		db=await helper.connect("db/channel.db")
 		db2=await helper.connect("db/info.db")
 		cur=await helper.cursor(db)
 		info=await helper.cursor(db2)
+		info_data=await helper.find_in_info(ctx.author.id)
 		user=await helper.find_user(ctx.author.id)
-		if user == False:
+		if not user:
 			await ctx.send(embed=self.channel_error)
+			return
+
+		if info_data[2] == 'no':
+			await ctx.send(embed=self.login_error)
 			return
 
 		embed=await ctx.send(embed=discord.Embed(
@@ -2201,6 +2366,517 @@ class social(commands.Cog):
 		finally:
 			await db.close()
 			await db2.close()
+
+
+	@commands.command("login", description="Use for login to your account by entering the account email and password!")
+	async def _login(self, ctx):
+		data=await helper.find_in_info(ctx.author.id)
+		channel=await helper.find_in_channel(ctx.author.id)
+
+		con=await helper.connect("db/info.db")
+		cur=await helper.cursor(con)
+		
+		print(data)
+		print(channel)
+		if not data or not channel:
+			await ctx.send("Oops you are not in the database! To be able to login to existing accounts you need to make your own account first using `p!start` command then use `p!login` again!")
+			return
+
+		buttons = ActionRow(
+			Button(
+				style=ButtonStyle.green,
+				label="Continue",
+				emoji="<:tick_yes:874284510135607350>",
+				custom_id="green"
+			),
+			Button(
+				style=ButtonStyle.red,
+				label="Abort",
+				emoji="<:tick_no:874284510575996968>",
+				custom_id="red"
+			)
+		)
+
+		if data[2] == 'no' or not data:
+			msg=await ctx.send(embed=discord.Embed(
+				title="Login!",
+				description="Hey there, you are one step closer to login into your account! if you want to cancel this command you can always type `abort`. Please press the green button to continue or red button to cancel this command. Once you press the green button the bot will guide you through the rest",
+				color=discord.Color.from_rgb(213, 240, 213)
+			), components=[
+				buttons
+			])
+
+			on_click=msg.create_click_listener(timeout=120)
+
+			@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
+			async def on_wrong_user(inter):
+				await inter.reply(
+					embed=discord.Embed(
+					description="You are not the member who use this command!",
+					color=discord.Color.red()
+				), 
+					ephemeral=True
+				)
+				
+			@on_click.matching_id("green")
+			async def _green(inter):
+				nonlocal data
+				nonlocal channel
+				nonlocal on_click
+				
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title="Step 1",
+					description="Type your account email name!",
+					color=discord.Color.from_rgb(213, 240, 213)
+				), components=[
+
+				])	
+				try:
+					email=await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author and msg.channel == ctx.channel, timeout=120.0)
+				except asyncio.TimeoutError:
+					await ctx.send(embed=discord.Embed(
+						title="Timeout",
+						description="I have stop the command due to its along activity!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+
+				raw_email=f"{email.content}@email.com"
+
+				if email.content.lower() == "abort":
+					await inter.edit(
+						type=7,
+						embed=discord.Embed(
+							description="Aborting...",
+							color=discord.Color.red()
+				))	
+					on_click.kill()
+					return
+
+				for x in self.special_chars:
+					if x in email.content:
+						await ctx.send(embed=discord.Embed(
+							description="Dont put special chars in email name!",
+							color=discord.Color.red()
+						))
+						on_click.kill()
+						return 
+
+				if len(email.content) > 15 or len(email.content) < 5:
+					await ctx.send(embed=discord.Embed(
+						description="You put too much or too little characters!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+				
+				await cur.execute("SELECT * FROM info WHERE email = ?", (raw_email,))
+				data=await cur.fetchone()
+				if not data:
+					await ctx.send(embed=discord.Embed(
+						description=f"I cant find that email. Try another one!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+				
+				if data[2] == "yes":
+					await ctx.send(embed=discord.Embed(
+						description="Someone already logged into that account! Perhaps you put wrong email?",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+				
+				
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title="Step 2",
+					description=f"Type the password for an account with `{raw_email}` as its email **in my DM**!",
+					color=discord.Color.from_rgb(213, 240, 213)
+				), components=[
+
+				])
+				#Password
+				await ctx.author.send("Type your password!")
+				password=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel))
+
+				if password.content.lower() == "abort":
+					await ctx.author.send(
+						type=7,
+						embed=discord.Embed(
+							description="Aborting...",
+							color=discord.Color.red()
+					))	
+					on_click.kill()
+					return
+				
+				for x in self.special_chars:
+					if x in password.content:
+						await ctx.author.send(embed=discord.Embed(
+							description="Dont put special chars in password name!",
+							color=discord.Color.red()
+						))
+						on_click.kill()
+						return 
+
+				if len(password.content) > 15 or len(password.content) < 5:
+					await ctx.author.send(embed=discord.Embed(
+						description="You put too much or too little characters!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+
+
+				if data[4] != password.content:
+					await ctx.author.send(embed=discord.Embed(
+						description=f"Wrong password, pls check if the password is correct!",
+						color=discord.Color.red()
+					))
+					on_click.kill()
+					return
+
+				await ctx.author.send(f"Back to {ctx.channel.mention}")
+
+
+				msg=await ctx.send(
+					content="Is this you? Click the green button if this is you, Click the red one if it isn't",
+					embed=discord.Embed(
+					title="Profile Menu!",
+					description=channel[2],
+					color=discord.Color.from_rgb(213, 240, 213),
+					timestamp=ctx.message.created_at
+					).set_author(
+						name=f"{ctx.author.name} (@{channel[1]})",
+						icon_url=channel[3]
+					).set_footer(
+						text=f"Source: @{channel[1]} | ID: {ctx.author.id}",
+						icon_url=channel[3]
+					).add_field(
+						name="<:follow:875659362264309791> Subs",
+						value=channel[4]
+					).add_field(
+						name="<:blurple_camera:875659362331394058> Videos",
+						value=channel[8]
+					).add_field(
+						name="🫂 Views",
+						value=channel[7]
+					).add_field(
+						name="<:likes:875659362343993404> Likes",
+						value=channel[5]
+					).add_field(
+						name="<:dislikes:875659362264309821> Dislikes",
+						value=channel[6]
+					).add_field(
+						name="\u200b",
+						value="\u200b"
+					).add_field(
+						name="Account Information",
+						value="Here is all of your account information! You can change it using p!setting command!",
+						inline=False
+					).add_field(
+						name="🫂 Gender",
+						value=data[1]
+					).add_field(
+						name="📧 email",
+						value=data[3]
+					).add_field(
+						name="🔑 Password",
+						value="||[Password Redacted]||",
+						inline=False
+					).add_field(
+						name="⌛ Account Age",
+						value=data[5]
+				), components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.green,
+								label="Continue",
+								emoji="<:tick_yes:874284510135607350>",
+								custom_id="green"
+							),
+							Button(
+								style=ButtonStyle.red,
+								label="Abort",
+								emoji="<:tick_no:874284510575996968>",
+								custom_id="red"
+							)
+						)
+					]
+				)
+
+				on_click.kill()
+				on_click=msg.create_click_listener(timeout=120.0)
+
+				@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
+				async def on_wrong_user(inter):
+					await inter.reply(
+						embed=discord.Embed(
+						description="You are not the member who use this command!",
+						color=discord.Color.red()
+					), 
+						ephemeral=True
+					)
+	
+				@on_click.matching_id("red")
+				async def _Red(inter):
+					await inter.reply(
+						type=7,
+						content="Aborting...",
+						embed=discord.Embed(
+						description="Aborting...",
+						color=discord.Color.red()
+					), components=[
+
+					])
+
+					on_click.kill()
+					return
+
+				@on_click.matching_id("green")
+				async def _Green(inter):
+					nonlocal on_click
+					nonlocal con
+					nonlocal cur
+
+					y='yes'
+					if data[0] == ctx.author.id:
+						await cur.execute("UPDATE info SET verified = ? WHERE email = ?", (y, raw_email))
+						await con.commit()
+						await cur.close()
+						await con.close()
+
+						await inter.reply(
+							type=7,
+							content=f"You successfully logged in as `{channel[1]}`. Now you can use all Social commands! use `p!help social` for all info about social ",
+							embed=discord.Embed(
+								title="Profile Menu!",
+								description=channel[2],
+								color=discord.Color.from_rgb(213, 240, 213),
+								timestamp=ctx.message.created_at
+								).set_author(
+									name=f"{ctx.author.name} (@{data[1]})",
+									icon_url=channel[3]
+								).set_footer(
+									text=f"Source: @{channel[1]} | ID: {ctx.author.id}",
+									icon_url=channel[3]
+								).add_field(
+									name="<:follow:875659362264309791> Subs",
+									value=channel[4]
+								).add_field(
+									name="<:blurple_camera:875659362331394058> Videos",
+									value=channel[8]
+								).add_field(
+									name="🫂 Views",
+									value=channel[7]
+								).add_field(
+									name="<:likes:875659362343993404> Likes",
+									value=channel[5]
+								).add_field(
+									name="<:dislikes:875659362264309821> Dislikes",
+									value=channel[6]
+								).add_field(
+									name="\u200b",
+									value="\u200b"
+								).add_field(
+									name="Account Information",
+									value="Here is all of your account information! You can change it using p!setting command!",
+									inline=False
+								).add_field(
+									name="🫂 Gender",
+									value=data[1]
+								).add_field(
+									name="📧 email",
+									value=data[3]
+								).add_field(
+									name="🔑 Password",
+									value="||[Password Redacted]||",
+									inline=False
+								).add_field(
+									name="⌛ Account Age",
+									value=data[5]
+								)
+							)
+
+						on_click.kill()
+						return
+					else:
+						await ctx.send("For now you can only access to an account that you create with `p!start` command! This will be fix later!")
+						# con=await helper.connect("db/info.db")
+						# cur=await helper.cursor(con)
+
+						# await cur.execute("SELECT * FROM info WHERE member_id = ?", (data[0],))
+						# user_info=await cur.fetchone()
+
+						# await cur.execute("SELECT * FROM info WHERE member_id = ?", (ctx.author.id,))
+						# author_info=await cur.fetchone()
+
+
+
+
+
+
+				
+
+			@on_click.matching_id("red")
+			async def _red(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					description="Aborting...",
+					color=discord.Color.red()
+				), components=[
+
+				])
+
+				on_click.kill()
+
+		else:
+			await ctx.send(embed=discord.Embed(
+				description=f"You already login to your account as `{channel[1]}` If thats not you use `p!logout` command and use the login command again!",
+				color=discord.Color.red()
+			))
+
+
+	@commands.command("logout", description="Logout from an account!")
+	async def _logout(self, ctx):
+		data=await helper.find_in_channel(ctx.author.id)
+		info=await helper.find_in_info(ctx.author.id)
+		
+		if not data or not info:
+			await ctx.send(embed=self.channel_error)
+			return
+
+		if info[2] == 'no':
+			await ctx.send(embed=discord.Embed(
+				description="You already logout from your account! Please use `p!login` command to login to your account!",
+				color=discord.Color.red()
+			))
+			return
+
+		msg=await ctx.send(
+			"**Confirmation**\nAre sure you want to logout from this account?",
+			embed=discord.Embed(
+				title="Profile Menu!",
+				description=data[2],
+				color=discord.Color.from_rgb(213, 240, 213),
+				timestamp=ctx.message.created_at
+				).set_author(
+					name=f"{ctx.author.name} (@{data[1]})",
+					icon_url=data[3]
+				).set_footer(
+					text=f"Source: @{data[1]} | ID: {ctx.author.id}",
+					icon_url=data[3]
+				).add_field(
+					name="<:follow:875659362264309791> Subs",
+					value=data[4]
+				).add_field(
+					name="<:blurple_camera:875659362331394058> Videos",
+					value=data[8]
+				).add_field(
+					name="🫂 Views",
+					value=data[7]
+				).add_field(
+					name="<:likes:875659362343993404> Likes",
+					value=data[5]
+				).add_field(
+					name="<:dislikes:875659362264309821> Dislikes",
+					value=data[6]
+				).add_field(
+					name="\u200b",
+					value="\u200b"
+				).add_field(
+					name="Account Information",
+					value="Here is all of your account information! You can change it using p!set command!",
+					inline=False
+				).add_field(
+					name="🫂 Gender",
+					value=info[1]
+				).add_field(
+					name="📧 email",
+					value=info[3]
+				).add_field(
+					name="🔑 Password",
+					value="||[Password Redacted]||",
+					inline=False
+				).add_field(
+					name="⌛ Account Age",
+					value=info[5]
+				), components=[
+					ActionRow(
+						Button(
+							style=ButtonStyle.green,
+							label="Continue",
+							emoji="<:tick_yes:874284510135607350>",
+							custom_id="green"
+						),
+						Button(
+							style=ButtonStyle.red,
+							label="Abort",
+							emoji="<:tick_no:874284510575996968>",
+							custom_id="red"
+						)
+					)
+				]
+			)
+
+		on_click=msg.create_click_listener(timeout=20)
+
+		@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
+		async def _not_from_author(inter):
+			await inter.reply(
+				embed=discord.Embed(
+					description="You are not the member who use this command!",
+					color=discord.Color.red()
+				), 
+					ephemeral=True
+				)
+
+		@on_click.matching_id("green")
+		async def _Green_(inter):
+			nonlocal on_click
+			con=await helper.connect("db/info.db")
+			cur=await helper.cursor(con)
+			await cur.execute("UPDATE info SET verified = ? WHERE member_id = ?", ('no', ctx.author.id))
+			
+			await con.commit()
+			await cur.close()
+			await con.close()
+			
+			await inter.reply(
+				type=7,
+				content=" ",
+				embed=discord.Embed(
+					description="You have succesfuly logout from the account! Please use `p!login` command to get access to your account!",
+					color=discord.Color.red()
+				), components=[
+
+				]
+			)
+			on_click.kill()
+			return
+
+		@on_click.matching_id("red")
+		async def red_(inter):
+			nonlocal on_click
+			await inter.reply(
+				type=7,
+				content="aborting...",
+				embed=discord.Embed(
+					description="Aborting...",
+					color=discord.Color.red()
+				), components=[
+
+				]
+			)
+			on_click.kill()
+			return
+
+
 
 def setup(bot):
 	bot.add_cog(social(bot))

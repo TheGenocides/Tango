@@ -14,13 +14,6 @@ class fun(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		
-	@commands.command()
-	async def msg(self, ctx):
-		msg=await ctx.channel.fetch_message(878118532796272671)
-		await ctx.send(msg)
-		await ctx.send(msg.attachments)
-		for x in msg.attachments:
-			await ctx.send(x)
 
 	@commands.command("ping", description="Show the bot latency")
 	async def _ping(self, ctx):
@@ -46,10 +39,14 @@ class fun(commands.Cog):
 		
 	@commands.group()
 	async def anime(self, ctx):
-		await ctx.send_help()
-
-	@anime.command("search")
-	async def _search(self,ctx,  *,name):
+		pass
+	
+	@anime.command("lyric", description="Get info about anime lyric!")
+	async def _lyric(self, ctx, *,name):
+		await ctx.send("Soon....")
+		
+	@anime.command("search", description="Get info about anime stats and much more!")
+	async def _search(self, ctx,  *,name):
 		await ctx.send("Wait a sec :p")
 		anime = helper.anime(name)
 
