@@ -4,6 +4,7 @@ import os
 import difflib
 import datetime
 import shutil
+import traceback
 
 #======================
 
@@ -64,8 +65,11 @@ class Tango(commands.Bot):
 					verified text,
 					email text,
 					password text,
-					age text
-		)""")
+					age text,
+					subscribed text,
+					liked text,
+					disliked text
+		)""") 
 
 		db3=await helper.connect("db/video.db")
 		cur3=await helper.cursor(db3)
@@ -102,6 +106,7 @@ class Tango(commands.Bot):
 
 	async def on_command_error(self, ctx, error):
 		CommandNotFound="<class 'discord.ext.commands.errors.CommandNotFound'>"
+		NotOwner="<Not Owner>"
 		if isinstance(error, (commands.MissingRole, commands.MissingAnyRole)):
 			print(error.__class__)
 			roles=[ctx.guild.get_role(role).mention for role in error.missing_roles] if isinstance(error, commands.errors.MissingAnyRole) else ctx.guild.get_role(int(error.missing_role)).mention
@@ -145,7 +150,22 @@ class Tango(commands.Bot):
 			return
 		
 		else:
+			await ctx.send(embed=discord.Embed(
+				title="Error",
+				description="An unexpected error has occured! I have notify my owner to fix this error!",
+				color=discord.Color.red()
+			))
+
+			channel=self.get_channel(879610856588075029)
+			tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+			await channel.send(
+				"An Error Has Occured",	
+				embed=discord.Embed(
+				description=f"```py\n{tb}\n```",
+				color=discord.Color.red()
+			))
 			raise error
+			
 
 
 	def _run_(self, token):
@@ -283,9 +303,10 @@ class HelpPage(commands.HelpCommand):
 
 	async def command_not_found(self, error):
 		channel = self.get_destination()
-		commands=['uptime', 'ping', 'idea', 'info', "start", "channel", "post", "videos", "search", "setting"]
+		commands=['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete']
 		possi=difflib.get_close_matches(error.lower(), commands)
 		category=difflib.get_close_matches(error.title(), ["owner", "fun", "social", "information"])
+		print(possi, category)
 		if category and not possi:
 			embed = discord.Embed(
 				title=f"No Category called '{error}' ",
@@ -303,7 +324,7 @@ class HelpPage(commands.HelpCommand):
 		elif possi and not category:
 			embed = discord.Embed(
 				title=f"No Command called '{error}' ",
-				description=f"Did you mean `{', '.join(possi) if possi else '.....'}`",
+				description=f"Did you mean `{', '.join(possi)}`",
 				color=discord.Color.red() 
 			).set_author(
 				name=f"By {self.context.author}",
@@ -328,32 +349,6 @@ class HelpPage(commands.HelpCommand):
 			)
 			await channel.send(embed=embed)
 
-	async def send_error_message(self, error):
-		channel = self.get_destination()
-		commands=['uptime', 'ping', 'idea', 'info', "start", "channel", "post", "videos", "search", "setting", "anime", "view", "profile", "login", "logout"]
-		error=''
-		if not error.lower():
-			error=error
-
-		possi=difflib.get_close_matches(error.lower(), commands)
-
-		category=difflib.get_close_matches(error.title(), ["Owner", "Fun", "Social", "Information"])
-
-
-		if possi or category:
-			return
-		embed = discord.Embed(
-			title="Error",
-			description=error,
-			color=discord.Color.red() 
-		).set_author(
-			name=self.context.author,
-			icon_url=self.context.author.avatar_url
-		).set_footer(
-			text=self.get_ending_note(False),
-			icon_url=self.context.author.avatar_url
-		)
-		await channel.send(embed=embed)
 
 #Context Menu Command
 

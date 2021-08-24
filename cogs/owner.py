@@ -12,9 +12,30 @@ class owner(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	@commands.command()
+	@commands.command("all_data", description="Get someone videos data!")
 	@commands.is_owner()
-	async def delete(self, ctx):
+	async def _all_data(self, ctx):
+		con=await helper.connect("db/channel.db")
+		cur=await helper.cursor(con)
+		await cur.execute("SELECT * FROM channel")
+		print(await cur.fetchall())
+		
+
+	@commands.command("video_data", description="Get someone videos data!")
+	@commands.is_owner()
+	async def _video_data(self, ctx, ID):
+		data=await helper.find_in_video(ID, mode='all')
+		await ctx.send(f".{data}")
+
+	@commands.command("data", description="Get someone channel data!")
+	@commands.is_owner()
+	async def _data(self, ctx, ID):
+		data=await helper.find_in_channel(ID)
+		await ctx.send(f".{data}")
+
+	@commands.command("info_delete")
+	@commands.is_owner()
+	async def _info_delete(self, ctx):
 		con=await helper.connect('db/channel.db')
 		con2=await helper.connect('db/info.db')
 		cur=await helper.cursor(con)
@@ -34,14 +55,11 @@ class owner(commands.Cog):
 	@commands.command()
 	@commands.is_owner()
 	async def set_video(self, ctx):
-		con=await helper.connect("db/channel.db")
+		con=await helper.connect("db/video.db")
 		cur=await helper.cursor(con)
 
 
-		await cur.execute("UPDATE channel SET videos = 0 WHERE member_id = 803589112874401793")
-		await cur.execute("UPDATE channel SET subscribers = 0 WHERE member_id = 685082846993317953")
-		await cur.execute("UPDATE channel SET videos = 0 WHERE member_id = 803589112874401793")
-		await cur.execute("UPDATE channel SET views = 0 WHERE member_id = 803589112874401793")
+		await cur.execute("UPDATE video SET deleted  = ? WHERE ID = ?", ("n", "2628051190"))
 
 		await con.commit()
 		await cur.close()
