@@ -17,7 +17,7 @@ class social(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.embed_color=discord.Color.from_rgb(136, 223 ,251)
-		self.special_characters = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`"]
+		self.special_characters = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`", "_"]
 		self.channel_error = discord.Embed(
 			description="You haven't made your channel, Use `p!start` command!",
 			color=discord.Color.red()
@@ -370,7 +370,7 @@ class social(commands.Cog):
 					icon_url=ctx.author.avatar_url
 				))
 
-				password=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel))
+				password=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel), timeout=60)
 				
 				if password.content.lower() == "abort":
 					await message.delete()
@@ -570,22 +570,15 @@ class social(commands.Cog):
 					)
 			
 		
-			except (discord.ext.commands.errors.CommandInvokeError, asyncio.TimeoutError) as e:
-				if e == commands.errors.CommandInvokeError:
-					await ctx.send(
-						embed=self.channel_error
-					)
+			except asyncio.TimeoutError:
+				await ctx.send(embed=discord.Embed(
+					title="Timeout!",
+					color=discord.Color.red()
+				).set_footer(
+					text="You are too slow, Use the command again!"
+				))
 
-				elif e == asyncio.TimeoutError:
-					await ctx.send(embed=discord.Embed(
-						title="Timeout!",
-						color=discord.Color.red()
-					).set_footer(
-						text="You are too slow, Use the command again!"
-					))
-
-				else:
-					raise e
+				
 
 	
 				

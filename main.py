@@ -19,10 +19,10 @@ async def after_invoke(ctx):
 
 @tasks.loop(seconds=600)
 async def _Database_backup():
-	pass
 
 load_dotenv()
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_RETAIN"] = "True"
 
+_Database_backup.start()
 bot._run_(os.environ["GAM"])
