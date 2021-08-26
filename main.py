@@ -1,6 +1,5 @@
 import bot
 import os
-import helper 
 
 from discord.ext import tasks
 from dotenv import load_dotenv 

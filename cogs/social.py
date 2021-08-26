@@ -106,9 +106,9 @@ class social(commands.Cog):
 	@commands.command("start", description="Make your Tango bot account")
 	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _start(self, ctx):
-		if not ctx.author.id in self.bot.owner_ids:
-			await ctx.send("Start command is under renovation due to an error!")
-			return
+		# if not ctx.author.id in self.bot.owner_ids:
+		# 	await ctx.send("Start command is under renovation due to an error!")
+		# 	return
 		
 		age=time.time()
 		db=await helper.connect("db/channel.db")
@@ -296,7 +296,7 @@ class social(commands.Cog):
 				await message.edit(
 					embed=discord.Embed(
 					title="Step 3",
-					description="Enter your email name, This step is very important because you need email to login to your account! Also this email is fake email not real one! You dont need to enter your email just make a new one that is fake of course.",
+					description="Enter your email name, This step is very important because you need email to login to your account! Also this email is fake email not real one! You dont need to enter your real email just enter a fake one of course.",
 					color=self.embed_color
 				).add_field(
 					name="Requirements!",
@@ -1396,7 +1396,7 @@ class social(commands.Cog):
 			cur=await helper.cursor(con)
 			info=await helper.find_in_info(ctx.author.id)
 			viewed=ast.literal_eval(info[6])
-			viewed.append(ctx.author.id)
+			viewed.append(int(video_ID))
 			await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", (str(viewed), ctx.author.id))
 			await con.commit()
 			await cur.close()
@@ -1779,11 +1779,14 @@ class social(commands.Cog):
 		i = 0
 		if len(data) > 1:
 			while True:
+				videos=await helper.find_videos(name)
+				data=[x for x in videos]
+				
 				con=await helper.connect('db/info.db')
 				cur=await helper.cursor(con)
 				info=await helper.find_in_info(ctx.author.id)
 				viewed=ast.literal_eval(info[6])
-				viewed.append(ctx.author.id)
+				viewed.append(data[i][10])
 				await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", (str(viewed), ctx.author.id))
 				await con.commit()
 				await cur.close()
@@ -1794,8 +1797,7 @@ class social(commands.Cog):
 				cur=await helper.cursor(con)
 				con2=await helper.connect("db/channel.db")
 				cur2=await helper.cursor(con2)
-				videos=await helper.find_videos(name)
-				data=[x for x in videos]
+
 				try:
 					if loop == True:
 						old_views=ast.literal_eval(data[i][11])
@@ -2178,11 +2180,14 @@ class social(commands.Cog):
 
 		elif len(data) == 1:
 			while True:
+				videos=await helper.find_videos(name)
+				data=[x for x in videos]
+
 				con=await helper.connect('db/info.db')
 				cur=await helper.cursor(con)
 				info=await helper.find_in_info(ctx.author.id)
 				viewed=ast.literal_eval(info[6])
-				viewed.append(ctx.author.id)
+				viewed.append(data[i][10])
 				await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", (str(viewed), ctx.author.id))
 				await con.commit()
 				await cur.close()
@@ -2194,8 +2199,7 @@ class social(commands.Cog):
 				user=await self.bot.fetch_user(channel_data[0])
 				con2=await helper.connect("db/channel.db")
 				cur2=await helper.cursor(con2)
-				videos=await helper.find_videos(name)
-				data=[x for x in videos]
+
 				if loop == True:
 					old_views=ast.literal_eval(data[i][11])
 					if not str(ctx.author.id) in old_views:
@@ -4431,13 +4435,16 @@ class social(commands.Cog):
 			except Exception as e:
 				raise e
 		 
-	@commands.command("history", description="Show a list of videos that you viewed before! If you dont provided max videos it will automatically send 10!")
-	async def _history(self, ctx, max=10):
+	@commands.command("history", description="Show a list of videos that you viewed before! If you dont provided max_video, it will automatically send 10!")
+	async def _history(self, ctx, max_video=10):
+		if not ctx.author.id in self.bot.owner_ids:
+			await ctx.send("That command is still on development!")
+			return
+
 		con=await helper.connect("db/info.db")
 		cur=await helper.cursor(con)
-
 		info=await helper.find_in_info(ctx.author.id)
-
+		#Fixing this tomorow!
 		if not info:
 			await ctx.send(embed=self.channel_error)
 			return
@@ -4446,63 +4453,245 @@ class social(commands.Cog):
 			await ctx.send(embed=self.login_error)
 			return
 
-		await cur.execute("SELECT * FROM video WHERE member_id = ?", (ctx.author.id,))
-		data=await cur.fetchone()
-		history=ast.literal_eval(data[6])
+		await cur.execute("SELECT * FROM info WHERE member_id = ?", (ctx.author.id,))
+		history=await cur.fetchone()
+		await cur.close()
+		await con.close()
 
+		channel_data=await helper.find_in_channel(ctx.author.id)
+		data=ast.literal_eval(history[6])
+		video=len(data)
+		print(data[:max_video])
+		return
+		
+		i = 0
 		while True:
-			#Do something here soon
-			pass
-		
-	@commands.command("reupload")
-	async def _reupload(self, ctx, video_ID):
-		con=await helper.connect("db/video.db")
-		cur=await helper.cursor(con)
+			raw_date=datetime.datetime.fromtimestamp(int(data[i][10]))
+			date_time=raw_date.strftime("%m/%d/%Y")
+			msg=await ctx.send(
+				embed=discord.Embed(
+					title='...' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][1],
+					url='' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+					description="This video is set to nsfw setting! Make sure to access this video in nsfw channels!" if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][2],
+					color=discord.Color.red() if data[i][14] == 'y' else self.embed_color
+					).set_footer(
+						text=f"Videos {i + 1}/{video} | Date: {date_time} | ID: {data[i][11]}",
+						icon_url=channel_data[3]
+					).set_author(
+						name=f"{ctx.author.name} (@{channel_data[1]})",
+						icon_url=channel_data[3]
+					), components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.blurple,
+								label="",
+								emoji="\U00002b05",
+								custom_id="left-button"
+							),
+							Button(
+								style=ButtonStyle.red,
+								label="",
+								emoji="<:tick_no:874284510575996968>",
+								custom_id="delete-button",
+							),
+							Button(
+								style=ButtonStyle.blurple,
+								label="",
+								emoji="\U000027a1",
+								custom_id="right-button"
+							)
+						)
+					]
+				)
 
-		channel=await helper.find_in_channel(ctx.author.id)
-		info=await helper.find_in_info(ctx.author.id)
-		
-		await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,))
-		data=await cur.fetchone()
+			file=await ctx.send(
+				'Search this video in nsfw channel!' if data[i][14] == 'y' else data[i][3],
+				components=[
+					ActionRow(
+						Button(
+							style=ButtonStyle.blurple,
+							label=data[i][4],
+							emoji="\U0001f465",
+							custom_id="view-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.grey,
+							label=channel_data[4],
+							emoji="<:user_icon:877535226694352946>",
+							custom_id="subs-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.green,
+							label=data[i][5],
+							emoji="<:likes:875659362343993404>",
+							custom_id="like-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.red,
+							label=data[i][6],
+							emoji="<:dislikes:875659362264309821>",
+							custom_id="dislike-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.grey,
+							label=date_time,
+							emoji="\U0000231b",
+							custom_id="time-button",
+							disabled=True
+						)
+					)
+				]
+			)
 
-		if not channel:
-			await ctx.send(embed=self.channel_error)
-			return
+			while True:
+				try:
+					inter = await ctx.wait_for_button_click(lambda inter: inter.author == ctx.author and inter.message.id == msg.id and inter.channel == ctx.channel, timeout=15)
+					if inter.author != ctx.author:
+						await inter.reply(embed=discord.Embed(
+							description="You are not the member who use this command!",
+							color=discord.Color.red()
+						),
+							ephemeral=True
+						)
+						
+					else:
+						break
 
-		if info[2] == 'no':
-			await ctx.send(embed=self.login_error)
-			return
+				except asyncio.TimeoutError:
+						await ctx.send(embed=discord.Embed(
+							title="Timeout!",
+							description="I have stop the command due to its long activity!",
+							color=discord.Color.red()
+						))
+						return
+				
+			if inter.clicked_button.custom_id == "left-button": #Left Button
+				if i == 0:
+					i = (len(data) - 1)
+					await msg.delete()
+					await file.delete()
+					await asyncio.sleep(0.5)
+				
+				else:
+					i -= 1
+					await msg.delete()
+					await file.delete()
+					await asyncio.sleep(0.5)
 
-		if not data:
-			await ctx.send(embed=discord.Embed(
-				description="You put a wrong ID!",
-				color=discord.Color.red()
-			))
-			return
+			elif inter.clicked_button.custom_id == "right-button":  #Right Button
+				if i == (len(data) - 1):
+					i = 0
+					await msg.delete()
+					await file.delete()
+					await asyncio.sleep(0.5)
 
-		if data[13] == 'n':
-			await ctx.send(embed=discord.Embed(
-				description="That video is already available!",
-				color=discord.Color.red()
-			))
-			return
+				else:
+					i += 1
+					await msg.delete()
+					await file.delete()
+					await asyncio.sleep(0.5)
 
-		if data[0] != ctx.author.id:
-			await ctx.send(embed=discord.Embed(
-				description="Your not the owner who uploaded this command!",
-				color=discord.Color.red()
-			))
-			return
 
-		try:
-			await cur.execute("UPDATE video SET deleted = ? WHERE ID = ?", ('n', video_ID))
-			await con.commit()
-			await cur.close()
-			await con.close()
+			elif inter.clicked_button.custom_id == "delete-button": #Delete Button
+				await msg.delete()
+				await file.delete()
+				await ctx.send(embed=discord.Embed(
+						description=f"{ctx.author.mention} thanks for using Tango bot :blush:",
+						color=self.embed_color,
+					)
+				)
+				break
 
-			await ctx.send(f"You reuploaded that video! Check it using `p!view {video_ID}`")
-		except Exception as e:
-			raise e 	
+			elif inter.clicked_button.custom_id == "select-button": #Select Button
+				try:
+					await inter.reply(
+						ctx.author.mention, 
+						embed=discord.Embed(
+							description=f"What video you want to view? You have **{video}** videos",
+							color=self.embed_color
+						))					
+					while True:
+						select=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=20)
+						page=0
+						try:
+							page=int(select.content)
+						except ValueError:
+							await asyncio.sleep(0.1)
+
+						if page > video:
+							await ctx.send("Number is Too large, enter it again with smaller one")
+							await asyncio.sleep(0.5)
+						
+						elif page <= 0:
+							await ctx.send("Number cannot be minus, zero, or letters enter it again with bigger one")
+							await asyncio.sleep(0.5)
+						
+						else:
+							page = page - 1
+							i = page
+							await msg.delete()
+							await file.delete()
+							await asyncio.sleep(0.5)
+							break
+
+				except Exception as e:
+					raise e
+
+	
+@commands.command("reupload")
+async def _reupload(self, ctx, video_ID):
+	con=await helper.connect("db/video.db")
+	cur=await helper.cursor(con)
+
+	channel=await helper.find_in_channel(ctx.author.id)
+	info=await helper.find_in_info(ctx.author.id)
+	
+	await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,))
+	data=await cur.fetchone()
+
+	if not channel:
+		await ctx.send(embed=self.channel_error)
+		return
+
+	if info[2] == 'no':
+		await ctx.send(embed=self.login_error)
+		return
+
+	if not data:
+		await ctx.send(embed=discord.Embed(
+			description="You put a wrong ID!",
+			color=discord.Color.red()
+		))
+		return
+
+	if data[13] == 'n':
+		await ctx.send(embed=discord.Embed(
+			description="That video is already available!",
+			color=discord.Color.red()
+		))
+		return
+
+	if data[0] != ctx.author.id:
+		await ctx.send(embed=discord.Embed(
+			description="Your not the owner who uploaded this command!",
+			color=discord.Color.red()
+		))
+		return
+
+	try:
+		await cur.execute("UPDATE video SET deleted = ? WHERE ID = ?", ('n', video_ID))
+		await con.commit()
+		await cur.close()
+		await con.close()
+
+		await ctx.send(f"You reuploaded that video! Check it using `p!view {video_ID}`")
+
+	except Exception as e:
+		raise e 	
 
 		
 	

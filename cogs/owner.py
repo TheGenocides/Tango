@@ -64,11 +64,11 @@ class owner(commands.Cog):
 	@commands.command()
 	@commands.is_owner()
 	async def set_video(self, ctx):
-		con=await helper.connect("db/video.db")
+		con=await helper.connect("db/info.db")
 		cur=await helper.cursor(con)
 
 
-		await cur.execute("UPDATE video SET deleted  = ? WHERE ID = ?", ("n", "2628051190"))
+		await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", ("['2376212112']", ctx.author.id))
 
 		await con.commit()
 		await cur.close()
