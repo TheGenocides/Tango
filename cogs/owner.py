@@ -12,20 +12,29 @@ class owner(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	@commands.command("all_data", description="Get someone videos data!")
+	@commands.command("channel_data", description="Get someone videos data!")
 	@commands.is_owner()
-	async def _all_data(self, ctx):
+	async def _channel_data(self, ctx):
 		con=await helper.connect("db/channel.db")
 		cur=await helper.cursor(con)
 		await cur.execute("SELECT * FROM channel")
 		print(await cur.fetchall())
 		
+	@commands.command("info_data", description="Get someone videos data!")
+	@commands.is_owner()
+	async def _info_data(self, ctx):
+		con=await helper.connect("db/info.db")
+		cur=await helper.cursor(con)
+		await cur.execute("SELECT * FROM info")
+		print(await cur.fetchall())
 
 	@commands.command("video_data", description="Get someone videos data!")
 	@commands.is_owner()
 	async def _video_data(self, ctx, ID):
-		data=await helper.find_in_video(ID, mode='all')
-		await ctx.send(f".{data}")
+		con=await helper.connect('db/video.db')
+		cur=await helper.cursor(con)
+		await cur.execute("SELECT * FROM video WHERE member_id = ?", (ID,))
+		await ctx.send(f".{await cur.fetchall()}")
 
 	@commands.command("data", description="Get someone channel data!")
 	@commands.is_owner()
@@ -33,9 +42,9 @@ class owner(commands.Cog):
 		data=await helper.find_in_channel(ID)
 		await ctx.send(f".{data}")
 
-	@commands.command("info_delete")
+	@commands.command("delete_account")
 	@commands.is_owner()
-	async def _info_delete(self, ctx):
+	async def _delete_account(self, ctx):
 		con=await helper.connect('db/channel.db')
 		con2=await helper.connect('db/info.db')
 		cur=await helper.cursor(con)

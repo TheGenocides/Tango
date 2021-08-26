@@ -12,7 +12,8 @@ from discord.ext import commands
 from dislash import SlashClient, Option, Type
 
 class Tango(commands.Bot):
-	def __init__(self):
+	def __init__(self):#Bubble-gum blue, Sakura pink
+		self.color=[0xAFEEEE, 0xFFB6C1]
 		super().__init__(
 			command_prefix=commands.when_mentioned_or("p!"),
 			help_command=HelpPage(),
@@ -66,6 +67,7 @@ class Tango(commands.Bot):
 					email text,
 					password text,
 					age text,
+					viewed text,
 					subscribed text,
 					liked text,
 					disliked text
@@ -92,20 +94,34 @@ class Tango(commands.Bot):
 					nsfw text,
 					comments integer
 		)""")
+
+		db4=await helper.connect('db/comment.db')
+		cur4=await helper.cursor(db4)
+		await cur4.execute("""CREATE TABLE IF NOT EXISTS comments(
+			commenter_id integer, 
+			video_id integer, 
+			content text, 
+			comment_id integer, 
+			date integer
+		)""")
+
 		await db.commit()
 		await db2.commit()
 		await db3.commit()
+		await db4.commit()
 		await cur.close()
 		await cur2.close()
 		await cur3.close()
+		await cur4.close()
 		await db.close()
 		await db2.close()
 		await db3.close()
+		await db4.close()
 		print("Im online :)")
 		
 
 	async def on_command_error(self, ctx, error):
-		CommandNotFound="<class 'discord.ext.commands.errors.CommandNotFound'>"
+ 
 		NotOwner="<Not Owner>"
 		if isinstance(error, (commands.MissingRole, commands.MissingAnyRole)):
 			print(error.__class__)
@@ -117,7 +133,7 @@ class Tango(commands.Bot):
 			)
 
 			em.set_author(
-				name=f"By {ctx.author}",
+				name=ctx.author,
 				icon_url=ctx.author.avatar_url
 			)
 			
@@ -137,7 +153,7 @@ class Tango(commands.Bot):
 			)
 
 			em.set_author(
-				name=f"By {ctx.author}",
+				name=ctx.author,
 				icon_url=ctx.author.avatar_url
 			)
 			
@@ -149,6 +165,46 @@ class Tango(commands.Bot):
 			await ctx.send(embed=em)
 			return
 		
+		elif isinstance(error, commands.CommandInvokeError):
+			org=getattr(error, "original", error)
+			if isinstance(org, discord.errors.HTTPException):
+				pass
+
+			else:
+				raise error
+
+		elif isinstance(error, commands.CommandNotFound):
+			possi=difflib.get_close_matches(ctx.invoked_with.lower(), ['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete']) 
+			em=discord.Embed(
+				title="Command Not Found",
+				description=f"No command called `{ctx.invoked_with}` did you mean `{', '.join(possi if possi else '.....')}`",
+				color=discord.Color.red()
+			).set_author(
+				name=ctx.author,
+				icon_url=ctx.author.avatar_url
+			).set_footer(
+				text=f"Requested By {ctx.author} • Use p!help for more info about all commands!",
+				icon_url=ctx.author.avatar_url
+			)
+
+			await ctx.send(embed=em)
+			return
+		elif isinstance(error, commands.CommandOnCooldown):
+			msg = f'**Command Still on cooldown**, please try again in **{error.retry_after:.2f}s** or wait untill this message got deleted!'
+			await ctx.send(
+				embed=discord.Embed(
+				title="Cooldown!",
+				description=msg,
+				color=discord.Color.red()
+			).set_author(
+				name=ctx.author,
+				icon_url=ctx.author.avatar_url
+			).set_footer(
+				text=f"Requested By {ctx.author} • Use p!help for more info about all commands!",
+				icon_url=ctx.author.avatar_url
+			), delete_after=error.retry_after
+		)
+
 		else:
 			await ctx.send(embed=discord.Embed(
 				title="Error",
@@ -191,11 +247,11 @@ class HelpPage(commands.HelpCommand):
 	async def send_bot_help(self, mapping):
 		cog_description={"owner": "These command can only use by one of the owner of the bot.", "fun": "Commands that can be use by all members without any specific permissions or roles.", "social": "Social is a group of commands that contain most of the commands that other can use!", "jishaku": "Jishaku commands", "information": "Commands that have all information that you need about Tango bot"}
 		
-		emojis={"owner": "👑", "fun": "🤡", "social": "🗨️", "jishaku": "⚙️", "information": "🛑"}
+		emojis={"owner": "<:Tango:878902180856352848>", "fun": "🤡", "social": "<:follow:879722735788519444>", "jishaku": "⚙️", "information": "🛑"}
 		em=discord.Embed(
 			title="HelpCommand",
-			description="Hello there, im Tango. A fun bot with a social media functions! Gain followers, million of views, and become the most followed channel! Post your meme and messages in community post! Post your video and get ton of review!. All seen across multiple country!\n\n**Select A Category:**",
-			color=discord.Color.orange()
+			description="Hello there, I'm Tango! A discord bot with Social Media Functions that lets you connect with others through their videos! Gain followers, Post your favorite video and get tons of views! Bored? Use our search command and find funny videos! Support creators by liking their video and subscribe, be sure not to dislikes them!\n\n**Select A Category:**",
+			color=discord.Color.from_rgb(136, 223 ,251)
 		)
 		for cog, cmd in mapping.items():
 			att=getattr(cog, "qualified_name", "No Category")
@@ -211,7 +267,7 @@ class HelpPage(commands.HelpCommand):
 				pass
 
 		em.set_author(
-			name=f"By {self.context.author}",
+			name=self.context.author,
 			icon_url=self.context.author.avatar_url
 		)
 		em.set_footer(
@@ -225,7 +281,7 @@ class HelpPage(commands.HelpCommand):
 		em=discord.Embed(
 			title=f"{cog.qualified_name}'s commands",
 			description="",
-			color=discord.Color.orange()
+			color=discord.Color.from_rgb(136, 223 ,251)
 		)
 
 		for cms in cog.get_commands():
@@ -233,7 +289,7 @@ class HelpPage(commands.HelpCommand):
 			em.description += f"`{com}`, "
 
 		em.set_author(
-			name=f"By {self.context.author}",
+			name=self.context.author,
 			icon_url=self.context.author.avatar_url
 		)
 		em.set_footer(
@@ -252,7 +308,7 @@ class HelpPage(commands.HelpCommand):
 		em=discord.Embed(
 			title=name,
 			description=description[name],
-			color=discord.Color.orange()
+			color=discord.Color.from_rgb(136, 223 ,251)
 		).add_field(
 			name="Syntax",
 			value=f"{self.clean_prefix}{name} {sig}",
@@ -262,7 +318,7 @@ class HelpPage(commands.HelpCommand):
 			value=', '.join([x for x in cmds]),
 			inline=True
 		).set_author(
-			name=f"By {self.context.author}",
+			name=self.context.author,
 			icon_url=self.context.author.avatar_url
 		).set_footer(
 			text=f"Use p!help {name} [Sub-Commands] for more info about the Sub-Commands",
@@ -282,7 +338,7 @@ class HelpPage(commands.HelpCommand):
 		em=discord.Embed(
 			title=command.name,
 			description=desc,
-			color=discord.Color.orange()
+			color=discord.Color.from_rgb(136, 223 ,251)
 		).add_field(
 			name="Syntax",
 			value=f"{self.clean_prefix}{command.qualified_name} {self.get_command_signature(command)}",
@@ -292,10 +348,10 @@ class HelpPage(commands.HelpCommand):
 			value=', '.join(x for x in aliases if not x.startswith(" ")),
 			inline=True
 		).set_author(
-			name=f"By {self.context.author}",
+			name=self.context.author,
 			icon_url=self.context.author.avatar_url
 		).set_footer(
-			text=f"Requested by {self.context.author}",
+			text=f"Requested by self.context.author",
 			icon_url=self.context.author.avatar_url
 		)
 		
@@ -303,17 +359,16 @@ class HelpPage(commands.HelpCommand):
 
 	async def command_not_found(self, error):
 		channel = self.get_destination()
-		commands=['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete']
-		possi=difflib.get_close_matches(error.lower(), commands)
+		possi=difflib.get_close_matches(error.lower(), ['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete'])
 		category=difflib.get_close_matches(error.title(), ["owner", "fun", "social", "information"])
-		print(possi, category)
+
 		if category and not possi:
 			embed = discord.Embed(
 				title=f"No Category called '{error}' ",
 				description=f"Did you mean `{', '.join(category)}`",
 				color=discord.Color.red() 
 			).set_author(
-				name=f"By {self.context.author}",
+				name=self.context.author,
 				icon_url=self.context.author.avatar_url
 			).set_footer(
 				text=f"Use {self.clean_prefix}{self.invoked_with} for more info about all commands",
@@ -327,7 +382,7 @@ class HelpPage(commands.HelpCommand):
 				description=f"Did you mean `{', '.join(possi)}`",
 				color=discord.Color.red() 
 			).set_author(
-				name=f"By {self.context.author}",
+				name=self.context.author,
 				icon_url=self.context.author.avatar_url
 			).set_footer(
 				text=f"Use {self.clean_prefix}{self.invoked_with} for more info about all commands",
@@ -341,7 +396,7 @@ class HelpPage(commands.HelpCommand):
 				description=f"Did you mean `.....`",
 				color=discord.Color.red() 
 			).set_author(
-				name=f"By {self.context.author}",
+				name=self.context.author,
 				icon_url=self.context.author.avatar_url
 			).set_footer(
 				text=f"Use {self.clean_prefix}{self.invoked_with} for more info about all commands",
@@ -525,7 +580,7 @@ async def help(inter):
 	em=discord.Embed(
 		title="HelpCommand",
 		description="Hello there, im Tango. A fun bot with a social media functions! Gain followers, million of views, and become the most followed channel! Post your meme and messages in community post! Post your video and get ton of review! All seen across multiple country!\n\n**Select A Category:**",
-		color=discord.Color.orange()
+		color=discord.Color.from_rgb(136, 223 ,251)
 	)
 	
 	for x in categories:

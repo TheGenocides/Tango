@@ -138,6 +138,7 @@ async def is_nsfw(ID):
 
 	return True if nsfw == 'y' else False 
 
+ 
 def anime(name):
 	anime = animec.Anime(name)
 	data=(anime.name, anime.url, anime.description, anime.poster, anime.episodes, anime.aired, anime.teaser, random.choice(anime.opening_themes), random.choice(anime.ending_themes), anime.ranked, anime.genres, anime.type, anime.status, anime.rating, anime.popularity, anime.producers)

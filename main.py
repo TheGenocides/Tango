@@ -1,6 +1,8 @@
 import bot
 import os
+import helper 
 
+from discord.ext import tasks
 from dotenv import load_dotenv 
 from dislash import InteractionClient
 
@@ -15,6 +17,10 @@ async def before_invoke(ctx):
 @bot.after_invoke
 async def after_invoke(ctx):
 	bot.processing_commands -= 1
+
+@tasks.loop(seconds=600)
+async def _Database_backup():
+	pass
 
 load_dotenv()
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"

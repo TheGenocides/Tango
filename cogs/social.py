@@ -6,7 +6,7 @@ import datetime
 import ast
 import requests
 
-#===============================
+#=============================== 
 
 from uuid import uuid4
 from discord.ext import commands
@@ -16,8 +16,8 @@ class social(commands.Cog):
 	"""Social is a group of commands that contain most of the commands that other can use ;)"""
 	def __init__(self, bot):
 		self.bot = bot
-		self.embed_color=discord.Color.from_rgb(213, 240, 213)
-		self.special_chars = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`"]
+		self.embed_color=discord.Color.from_rgb(136, 223 ,251)
+		self.special_characters = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`"]
 		self.channel_error = discord.Embed(
 			description="You haven't made your channel, Use `p!start` command!",
 			color=discord.Color.red()
@@ -40,8 +40,8 @@ class social(commands.Cog):
 	# 	print(self.bot.processing_commands)
 
 	@commands.command("profile", description="Profile command can let you see your channel stats!")
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _profile(self, ctx):
-
 		data=await helper.find_in_channel(ctx.author.id)
 		info=await helper.find_in_info(ctx.author.id)
 
@@ -85,7 +85,7 @@ class social(commands.Cog):
 						value="\u200b"
 					).add_field(
 						name="Account Information",
-						value="Here is all of your account information! You can change it using t!set command!",
+						value="Here is all of your account information! You can change it using p!setting command!",
 						inline=False
 					).add_field(
 						name="🫂 Gender",
@@ -104,6 +104,7 @@ class social(commands.Cog):
 				)		
 
 	@commands.command("start", description="Make your Tango bot account")
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _start(self, ctx):
 		if not ctx.author.id in self.bot.owner_ids:
 			await ctx.send("Start command is under renovation due to an error!")
@@ -153,7 +154,7 @@ class social(commands.Cog):
 			]
 		)
 		
-		on_click=embed_message.create_click_listener(timeout=120)
+		on_click=embed_message.create_click_listener(timeout=60)
 		
 
 		@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
@@ -187,13 +188,19 @@ class social(commands.Cog):
 				message=await inter.reply(
 					embed=discord.Embed(
 					title="Step 1",
-					description="Type your channel name without special chars! Minimum of 5 to 15 characters!",
+					description="Type your channel name. This name will get displayed in your profile and whenever someone check your channel display.",
 					color=self.embed_color
+				).add_field(
+					name="Requirements!",
+					value="\> Type your channel name without special characters!\n\> Minimum of 5 to 15 characters!\n\> Make sure the name is not exist yet."
+				).set_footer(
+					text=f"{ctx.author} • You can type abort to cancel this command!",
+					icon_url=ctx.author.avatar_url
 				), components=[
 					
 				])
 				
-				msg=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
+				msg=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=25)
 				
 				if msg.content.lower() == "abort":
 					await message.delete()
@@ -204,10 +211,10 @@ class social(commands.Cog):
 					on_click.kill()
 					return
 
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in msg.content:
 						await ctx.send(embed=discord.Embed(
-							description="Dont put special chars in channel name!",
+							description="Dont put special characters in channel name!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
@@ -236,8 +243,14 @@ class social(commands.Cog):
 				await message.edit(
 					embed=discord.Embed(
 					title="Step 2",
-					description="Select your gender with the dropdown below this embed!\nWe have Male, Female, and NonBinary",
+					description="Select your gender with the dropdown below this embed! This is only for info and will get display in your profile only!",
 					color=self.embed_color
+				).add_field(
+					name="Requirements!",
+					value="\> Select only one!\n\> You cant skip this process\n\> You may or may not use your real gender, it wont affect anything."
+				).set_footer(
+					text=f"{ctx.author} • You cant type abort for this process to cancel this command!",
+					icon_url=ctx.author.avatar_url
 				), components=[
 						SelectMenu(
 							custom_id="Gender",
@@ -253,29 +266,48 @@ class social(commands.Cog):
 				)		
 
 				while True:
-					inter = await message.wait_for_dropdown(check=lambda inter: inter.author == ctx.author)
-					if inter.author != ctx.author:
-						await inter.reply(embed=discord.Embed(
-							description="You are not the member who use this command!",
-							color=discord.Color.red()
-						), 
-							ephemeral=True
-						)
+					try:
+						inter = await message.wait_for_dropdown(check=lambda inter: inter.author == ctx.author, timeout=25)
+						if inter.author != ctx.author:
+							await inter.reply(embed=discord.Embed(
+								description="You are not the member who use this command!",
+								color=discord.Color.red()
+							), 
+								ephemeral=True
+							)
+							
 						
-					
-					else:
-						break
+						else:
+							break
+
+					except asyncio.TimeoutError:
+						await ctx.send(embed=discord.Embed(
+							title="Timeout",
+							description="I have stop the command due to its long activity!",
+							color=discord.Color.red()
+						))
+						return
 					
 				label = "".join([option.label for option in inter.select_menu.selected_options])
 				await inter.reply(f"You choose **{label}**")
 				await asyncio.sleep(2)
 
 				#Select email
-				await message.reply(
+				await message.edit(
 					embed=discord.Embed(
 					title="Step 3",
-					description="Enter your email name, enter your email without any special chars! (e.g EpicUser123, DiscordUser321) You need a minimum of 5 to 15 characters",
+					description="Enter your email name, This step is very important because you need email to login to your account! Also this email is fake email not real one! You dont need to enter your email just make a new one that is fake of course.",
 					color=self.embed_color
+				).add_field(
+					name="Requirements!",
+					value="\> Type your email name without special characters!\n\> Minimum of 5 to 15 characters!\n\> Make sure the name is not exist yet.\n\> You may not use '@email' or similar word in this process!"
+				).add_field(
+					name="Example!",
+					value="\> EpicUser123\n\> DiscordUser321",
+					inline=True
+				).set_footer(
+					text=f"{ctx.author} • You can type abort to cancel this command!",
+					icon_url=ctx.author.avatar_url
 				),  components=[])
 				email=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel)
 
@@ -289,11 +321,11 @@ class social(commands.Cog):
 					on_click.kill()
 					return
 
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in email.content:
 						await message.delete()
 						await ctx.send(embed=discord.Embed(
-							description="Dont put special chars in email name!",
+							description="Dont put special characters in email name!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
@@ -330,6 +362,12 @@ class social(commands.Cog):
 					title="Step 4",
 					description="DM me your password! You need a minimum of 5 to 15 characters",
 					color=self.embed_color
+				).add_field(
+					name="Requirements!",
+					value="\> Type your password without special characters!\n\> Minimum of 5 to 15 characters!\n"
+				).set_footer(
+					text=f"{ctx.author} • You can type abort to cancel this command!",
+					icon_url=ctx.author.avatar_url
 				))
 
 				password=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel))
@@ -344,11 +382,11 @@ class social(commands.Cog):
 					on_click.kill()
 					return
 
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in password.content:
 						await message.delete()
 						await ctx.author.send(embed=discord.Embed(
-							description="Dont put special chars in password!",
+							description="Dont put special characters in password!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
@@ -366,11 +404,11 @@ class social(commands.Cog):
 				await ctx.author.send(f"Your password is ||{password.content}|| Continue to {ctx.channel.mention}!")
 
 				confirm=await inter.reply(
-					f"**Little bit more!**\n{ctx.author.mention} You just need to confirm all of your credentials. We(TangoBot devs) respect all of your privacy, For your information we are only gonna store your Member-ID and your Tango bot account password which is bind to your ID!\nPlease click the green button to continue or the red button to decline this!",
+					f"**`Little bit more!`**\n{ctx.author.mention} You just need to confirm all of your credentials. We(TangoBot devs) respect all of your privacy, For your information we are only gonna store your Member-ID and your Tango bot account password which is bind to your ID!\nPlease click the green button to continue or the red button to decline this!",
 					type=7,
 					embed=discord.Embed(
 					title="<a:moving_gear:874897860469088296> Profile",
-					description="<a:moving_gear:874897860469088296> Set a new description, banner, using t!set command! also you can change channel name, email, password, and gender so dont you worry!",
+					description="<a:moving_gear:874897860469088296> Set a new description, banner, using p!setting command! also you can change channel name, email, password, and gender so dont you worry!",
 					color=self.embed_color,
 					timestamp=ctx.message.created_at
 				).set_author(
@@ -399,7 +437,7 @@ class social(commands.Cog):
 					value="\u200b"
 				).add_field(
 					name="Account Information",
-					value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using t!set command!",
+					value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using p!setting command!",
 					inline=False
 				).add_field(
 					name="🫂 Gender",
@@ -419,7 +457,7 @@ class social(commands.Cog):
 					buttons
 				]
 			)
-				on_click=confirm.create_click_listener(timeout=120.0)
+				on_click=confirm.create_click_listener(timeout=60.0)
 				
 				@on_click.not_from_user(ctx.author, cancel_others=True)
 				async def _not_From_user(inter):
@@ -433,8 +471,8 @@ class social(commands.Cog):
 
 				@on_click.matching_id("green")
 				async def _Green(inter):
-					await cur.execute("INSERT INTO channel VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, msg.content, "Set a new description, banner, using t!set command! also you can change channel name, email, password, and gender so dont you worry!", str(ctx.author.avatar_url), 0, 0, 0, 0, 0, "no", 0, f'["{ctx.author.id}"]'))
-					await cur2.execute("INSERT INTO info VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, label, "no", email, password.content, f"<t:{int(age)}:F>", f'[]', f'[]', f'[]'))
+					await cur.execute("INSERT INTO channel VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, msg.content, "Set a new description, banner, using p!setting command! also you can change channel name, email, password, and gender so dont you worry!", str(ctx.author.avatar_url), 0, 0, 0, 0, 0, "no", 0, f'["{ctx.author.id}"]'))
+					await cur2.execute("INSERT INTO info VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, label, "no", email, password.content, f"<t:{int(age)}:F>", '[]', '[]', '[]', '[]'))
 					await db.commit()
 					await db2.commit()
 					await inter.reply(
@@ -442,7 +480,7 @@ class social(commands.Cog):
 						type=7,
 						embed=discord.Embed(
 							title="<a:moving_gear:874897860469088296> Profile",
-							description="<a:moving_gear:874897860469088296> Set a new description, banner, using t!set command! also you can change channel name, email, password, and gender so dont you worry!",
+							description="<a:moving_gear:874897860469088296> Set a new description, banner, using p!setting command! also you can change channel name, email, password, and gender so dont you worry!",
 							color=self.embed_color,
 							timestamp=ctx.message.created_at
 						).set_author(
@@ -471,7 +509,7 @@ class social(commands.Cog):
 							value="\u200b"
 						).add_field(
 							name="Account Information",
-							value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using t!set command!",
+							value="<a:moving_gear:874897860469088296> Here is all of your account information! You can change it using p!setting command!",
 							inline=False
 						).add_field(
 							name="🫂 Gender",
@@ -564,7 +602,8 @@ class social(commands.Cog):
 				)
 			)
 		
-	@commands.command("upload",  description="Post a video!", aliases=['post', "up"])
+	@commands.command("upload",  description="Upload a video!", aliases=['post', "up"])
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _upload(self, ctx):
 
 		# if not ctx.author.id in self.bot.owner_ids:
@@ -726,7 +765,7 @@ class social(commands.Cog):
 
 
 							await asyncio.sleep(0.5)
-							await em.edit(content="Are you sure you want to post this video?\nClick the green button to post this video or click the red button to cancelled this process!", embed=discord.Embed(
+							await em.edit(content="Are you sure you want to upload this video?\nClick the green button to upload this video or click the red button to cancelled this process!", embed=discord.Embed(
 								title=title.content,
 								url=x,
 								description=description if len(description) > 1 else "",
@@ -770,7 +809,7 @@ class social(commands.Cog):
 							if x.content_type in ["video/mp4", "video/mp3"]:
 								await ctx.send(x)
 
-							on_click = em.create_click_listener(timeout=120.0) 
+							on_click = em.create_click_listener(timeout=60.0) 
 							
 							@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
 							async def on_wrong_user(inter):
@@ -788,6 +827,8 @@ class social(commands.Cog):
 								nonlocal on_click
 
 								date_=int(time.time())
+								raw_date=datetime.datetime.fromtimestamp(date_)
+								date_time=raw_date.strftime("%m/%d/%Y")
 								con=await helper.connect("db/video.db")
 								cur=await helper.cursor(con)
 								await cur.execute("INSERT INTO video VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, str(title.content), str(description), str(x), 0, 0, 0, f'["{ctx.author.id}"]', f'["{ctx.author.id}"]', x.content_type, date_, token, f'["{ctx.author.id}"]', "n", nsfw.content, 0))
@@ -814,9 +855,9 @@ class social(commands.Cog):
 									description=description if len(description) > 1 else "",
 									color=self.embed_color
 									).set_footer(
-										text=f"Source : @{source[0]} | {ctx.author}"
+										text=f"Source : @{source[0]} | Date: {date_time} | ID: {token}"
 									).set_author(
-										name=f"@{source[0]}",
+										name=f"{ctx.author.name} (@{source[0]})",
 										url=x,
 										icon_url=ctx.author.avatar_url
 									).set_image(
@@ -901,7 +942,7 @@ class social(commands.Cog):
 					))
 
 					await asyncio.sleep(0.5)
-					await em.edit(content="Are you sure you want to post this video?\nClick the green button to post this video or click the red button to cancelled this process!", embed=discord.Embed(
+					await em.edit(content="Are you sure you want to upload this video?\nClick the green button to upload this video or click the red button to cancelled this process!", embed=discord.Embed(
 						title=title.content,
 						description=description if len(description) > 1 else "This video dont have a description",
 						color=self.embed_color
@@ -939,7 +980,7 @@ class social(commands.Cog):
 					)
 
 					await ctx.send(attach.content)
-					on_click = em.create_click_listener(timeout=120.0) 
+					on_click = em.create_click_listener(timeout=60.0) 
 							
 					@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
 					async def on_wrong_user(inter):
@@ -1055,6 +1096,7 @@ class social(commands.Cog):
 			raise e from e
 
 	@commands.command("videos",  description="Check up your videos")
+	@commands.cooldown(1, 4, commands.BucketType.user)
 	async def _videos(self, ctx):
 		
 		data=await helper.find_in_video(ctx.author.id, False, mode="all")
@@ -1069,18 +1111,13 @@ class social(commands.Cog):
 			await ctx.send(embed=self.login_error)
 			return
 
-		if not data:
-			await ctx.send(embed=self.video_error)
-			return
-
 		video=int(channel_data[8]) 
 		i = video - 1
 
-		if i < 0:
+		if not data or i < 0:
 			await ctx.send(embed=self.video_error)
 			return
 
-		print(data)
 		if video > 1 and len(data) > 1: 
 			while True:
 				raw_date=datetime.datetime.fromtimestamp(int(data[i][10]))
@@ -1171,17 +1208,26 @@ class social(commands.Cog):
 				)
 
 				while True:
-					inter = await ctx.wait_for_button_click(lambda inter: inter.author == ctx.author and inter.message.id == msg.id and inter.channel == ctx.channel)
-					if inter.author != ctx.author:
-						await inter.reply(embed=discord.Embed(
-							description="You are not the member who use this command!",
-							color=discord.Color.red()
-						),
-							ephemeral=True
-						)
-						
-					else:
-						break
+					try:
+						inter = await ctx.wait_for_button_click(lambda inter: inter.author == ctx.author and inter.message.id == msg.id and inter.channel == ctx.channel, timeout=15)
+						if inter.author != ctx.author:
+							await inter.reply(embed=discord.Embed(
+								description="You are not the member who use this command!",
+								color=discord.Color.red()
+							),
+								ephemeral=True
+							)
+							
+						else:
+							break
+
+					except asyncio.TimeoutError:
+							await ctx.send(embed=discord.Embed(
+								title="Timeout!",
+								description="I have stop the command due to its long activity!",
+								color=discord.Color.red()
+							))
+							return
 					
 				if inter.clicked_button.custom_id == "left-button": #Left Button
 					if i == 0:
@@ -1317,6 +1363,7 @@ class social(commands.Cog):
 			)		
 
 	@commands.command("view", description="View a video with its ID")
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _view(self, ctx, *,video_ID):
 		loop=True
 		con=await helper.connect('db/video.db')
@@ -1338,12 +1385,23 @@ class social(commands.Cog):
 				color=discord.Color.red()
 			))
 			return
+
 		user=await self.bot.fetch_user(data[0])
 		await cur.close()
 		await con.close()
 		
 		i = 0
 		while True:
+			con=await helper.connect('db/info.db')
+			cur=await helper.cursor(con)
+			info=await helper.find_in_info(ctx.author.id)
+			viewed=ast.literal_eval(info[6])
+			viewed.append(ctx.author.id)
+			await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", (str(viewed), ctx.author.id))
+			await con.commit()
+			await cur.close()
+			await con.close()
+
 			data=await helper.view(video_ID)
 			channel_data=await helper.find_in_channel(int(data[i][8]))
 			con=await helper.connect("db/video.db")
@@ -1454,17 +1512,28 @@ class social(commands.Cog):
 		
 			try:
 				while True:
-					inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel)
-					if inter.author != ctx.author:
-						await inter.reply(embed=discord.Embed(
-							description="You are not the member who use this command!",
+					try:
+						inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel, timeout=100)
+						if inter.author != ctx.author:
+							await inter.reply(embed=discord.Embed(
+								description="You are not the member who use this command!",
+								color=discord.Color.red()
+							), 
+								ephemeral=True
+							)
+							
+						else:
+							break
+
+					except asyncio.TimeoutError:
+						await msg.delete()
+						await file.delete()
+						await ctx.send(embed=discord.Embed(
+							title="Timeout!",
+							description="I have stop the command due to its long activity!",
 							color=discord.Color.red()
-						), 
-							ephemeral=True
-						)
-						
-					else:
-						break
+						))
+						return
 
 				button_id = inter.clicked_button.custom_id
 				
@@ -1689,9 +1758,8 @@ class social(commands.Cog):
 
 			
 	@commands.command("search", description="Search up videos that got posted by other members!")
-	@commands.is_owner()
+	@commands.cooldown(1, 6, commands.BucketType.user)
 	async def _search(self, ctx, *,name):
-
 		loop=True
 		if not len(name) >= 3:
 			await ctx.send(embed=discord.Embed(
@@ -1700,14 +1768,27 @@ class social(commands.Cog):
 				text="The name argument must have 3 or more characters"
 			))
 			return
-
+		
+		
 		videos=await helper.find_videos(name)
 		data=[x for x in videos]
 		
 		
+
+
 		i = 0
 		if len(data) > 1:
 			while True:
+				con=await helper.connect('db/info.db')
+				cur=await helper.cursor(con)
+				info=await helper.find_in_info(ctx.author.id)
+				viewed=ast.literal_eval(info[6])
+				viewed.append(ctx.author.id)
+				await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", (str(viewed), ctx.author.id))
+				await con.commit()
+				await cur.close()
+				await con.close()
+
 				channel_data=await helper.find_in_channel(data[i][8])
 				con=await helper.connect("db/video.db")
 				cur=await helper.cursor(con)
@@ -1812,22 +1893,29 @@ class social(commands.Cog):
 						await con2.commit()
 
 					while True:
-						inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel)	
-						author=await helper.find_in_channel(inter.author.id)
-						if author == None:
-							await ctx.send(embed=self.channel_error)
-							return
-						
-						if inter.author != ctx.author:
-							await inter.reply(embed=discord.Embed(
-								description="You are not the member who use this command!",
-								color=discord.Color.red()
-							), 
-								ephemeral=True
-							)
+						try:
+							inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel, timeout=100)	
 							
-						else:
-							break
+							if inter.author != ctx.author:
+								await inter.reply(embed=discord.Embed(
+									description="You are not the member who use this command!",
+									color=discord.Color.red()
+								), 
+									ephemeral=True
+								)
+								
+							else:
+								break
+
+						except asyncio.TimeoutError:
+							await msg.delete()
+							await file.delete()
+							await ctx.send(embed=discord.Embed(
+								title="Timeout!",
+								description="I have stop the command due to its long activity!",
+								color=discord.Color.red()
+							))
+							return
 
 					button_id = inter.clicked_button.custom_id
 					if button_id == "right-button":  #Right Button
@@ -2090,6 +2178,15 @@ class social(commands.Cog):
 
 		elif len(data) == 1:
 			while True:
+				con=await helper.connect('db/info.db')
+				cur=await helper.cursor(con)
+				info=await helper.find_in_info(ctx.author.id)
+				viewed=ast.literal_eval(info[6])
+				viewed.append(ctx.author.id)
+				await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", (str(viewed), ctx.author.id))
+				await con.commit()
+				await cur.close()
+				await con.close()
 
 				channel_data=await helper.find_in_channel(data[i][8])
 				con=await helper.connect("db/video.db")
@@ -2201,7 +2298,7 @@ class social(commands.Cog):
 			
 				try:
 					while True:
-						inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel)
+						inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel, timeout=100)
 						if inter.author != ctx.author:
 							await inter.reply(embed=discord.Embed(
 								description="You are not the member who use this command!",
@@ -2431,7 +2528,15 @@ class social(commands.Cog):
 						await con2.close()
 
 				except Exception as e:
-					raise e
+					if isinstance(e, asyncio.TimeoutError):
+						await msg.delete()
+						await file.delete()
+						await ctx.send(embed=discord.Embed(
+							title="Timeout!",
+							description="I have stop the command due to its long activity!",
+							color=discord.Color.red()
+						))
+						return
 		else:
 			msg=await ctx.send(embed=discord.Embed(
 				title=f"Searched for '{name}'",
@@ -2442,6 +2547,7 @@ class social(commands.Cog):
 		)
 	
 	@commands.command("setting", description="Setting up your channel and profile info", aliases=['set'])
+	@commands.cooldown(1, 4, commands.BucketType.user)
 	async def _setting(self, ctx):
 
 
@@ -2464,7 +2570,7 @@ class social(commands.Cog):
 			title="<a:moving_gear:874897860469088296> Setting Menu",
 			description="Is there anything i could help?",
 			color=self.embed_color
-		).add_footer(
+		).set_footer(
 			text="Select what you need to change through the dropdown below this embed | Considering voting Tango in DBL with p!vote command!"
 		), 
 		components=[
@@ -2487,17 +2593,27 @@ class social(commands.Cog):
 		)
 		try:
 			while True:
-				inter = await embed.wait_for_dropdown(check=lambda inter: inter.author == ctx.author)
-				if inter.author != ctx.author:
-					await inter.reply(embed=discord.Embed(
-						description="You are not the member who use this command!",
+				try:
+					inter = await embed.wait_for_dropdown(check=lambda inter: inter.author == ctx.author, timeout=10)
+					if inter.author != ctx.author:
+						await inter.reply(embed=discord.Embed(
+							description="You are not the member who use this command!",
+							color=discord.Color.red()
+						), 
+							ephemeral=True
+						)
+						
+					else:
+						break
+
+				except asyncio.TimeoutError:
+					await ctx.send(embed=discord.Embed(
+						title="Timeout",
+						description="I have stop the command due to its long activity!",
 						color=discord.Color.red()
-					), 
-						ephemeral=True
-					)
-					
-				else:
-					break
+					))
+					return
+
 			label = "".join([option.label for option in inter.select_menu.selected_options])
 			value= "".join([option.value for option in inter.select_menu.selected_options])
 			if value == "channel":
@@ -2589,12 +2705,22 @@ class social(commands.Cog):
 							SelectOption("NonBinary", "value 3", emoji="\U00002b1c")
 						]
 					)
-				]
-			)
-				gender = await Message.wait_for_dropdown(check=lambda inter: inter.author == ctx.author)
+				]	
+			)	
+			
+				try:
+					gender = await Message.wait_for_dropdown(check=lambda inter: inter.author == ctx.author, timeout=10)
+				except asyncio.TimeoutError:
+					await ctx.send(embed=discord.Embed(
+						title="Timeout",
+						description="I have stop the command due to its long activity!",
+						color=discord.Color.red()
+					))
+					return
+
 				label = "".join([option.label for option in gender.select_menu.selected_options])
 				await gender.reply(embed=discord.Embed(
-						description="Done! Check it using t!info",
+						description="Done! Check it using p!profile",
 						color=self.embed_color
 					)
 				)
@@ -2614,10 +2740,10 @@ class social(commands.Cog):
 				))
 				msg=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=120)
 
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in msg.content:
 						await ctx.send(embed=discord.Embed(
-							description="Dont put special chars in email!",
+							description="Dont put special characters in email!",
 							color=discord.Color.red()
 						))
 						return 
@@ -2644,10 +2770,10 @@ class social(commands.Cog):
 				))
 				msg=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and isinstance(x.channel, discord.DMChannel), timeout=120)
 				
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in msg.content:
 						await ctx.author.send(embed=discord.Embed(
-							description="Dont put special chars in password!",
+							description="Dont put special characters in password!",
 							color=discord.Color.red()
 						))
 						return 
@@ -2655,7 +2781,7 @@ class social(commands.Cog):
 				await ctx.author.send(f"Your password are ||{msg.content}||")
 				await info.execute("UPDATE info SET password = ? WHERE member_id = ?", (msg.content, ctx.author.id))
 				await ctx.send(ctx.author.mention, embed=discord.Embed(
-						description="Done! Check it using t!info",
+						description="Done! Check it using p!profile",
 						color=self.embed_color
 					)
 				)
@@ -2675,6 +2801,7 @@ class social(commands.Cog):
 
 
 	@commands.command("login", description="Use for login to your account by entering the account email and password!")
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _login(self, ctx):
 
 		data=await helper.find_in_info(ctx.author.id)
@@ -2745,7 +2872,7 @@ class social(commands.Cog):
 				except asyncio.TimeoutError:
 					await ctx.send(embed=discord.Embed(
 						title="Timeout",
-						description="I have stop the command due to its along activity!",
+						description="I have stop the command due to its long activity!",
 						color=discord.Color.red()
 					))
 					on_click.kill()
@@ -2762,10 +2889,10 @@ class social(commands.Cog):
 					on_click.kill()
 					return
 
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in email.content:
 						await ctx.send(embed=discord.Embed(
-							description="Dont put special chars in email name!",
+							description="Dont put special characters in email name!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
@@ -2821,10 +2948,10 @@ class social(commands.Cog):
 					on_click.kill()
 					return
 				
-				for x in self.special_chars:
+				for x in self.special_characters:
 					if x in password.content:
 						await ctx.author.send(embed=discord.Embed(
-							description="Dont put special chars in password name!",
+							description="Dont put special characters in password name!",
 							color=discord.Color.red()
 						))
 						on_click.kill()
@@ -2883,7 +3010,7 @@ class social(commands.Cog):
 						value="\u200b"
 					).add_field(
 						name="Account Information",
-						value="Here is all of your account information! You can change it using p!setting command!",
+						value="Here is all of your account information! You can change it using p!settingting command!",
 						inline=False
 					).add_field(
 						name="🫂 Gender",
@@ -2917,7 +3044,7 @@ class social(commands.Cog):
 				)
 
 				on_click.kill()
-				on_click=msg.create_click_listener(timeout=120.0)
+				on_click=msg.create_click_listener(timeout=60.0)
 
 				@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=True)
 				async def on_wrong_user(inter):
@@ -2991,7 +3118,7 @@ class social(commands.Cog):
 									value="\u200b"
 								).add_field(
 									name="Account Information",
-									value="Here is all of your account information! You can change it using p!setting command!",
+									value="Here is all of your account information! You can change it using p!settingting command!",
 									inline=False
 								).add_field(
 									name="🫂 Gender",
@@ -3050,6 +3177,7 @@ class social(commands.Cog):
 
 
 	@commands.command("logout", description="Logout from an account!")
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _logout(self, ctx):
 
 		data=await helper.find_in_channel(ctx.author.id)
@@ -3099,7 +3227,7 @@ class social(commands.Cog):
 					value="\u200b"
 				).add_field(
 					name="Account Information",
-					value="Here is all of your account information! You can change it using t!set command!",
+					value="Here is all of your account information! You can change it using p!setting command!",
 					inline=False
 				).add_field(
 					name="🫂 Gender",
@@ -3184,7 +3312,8 @@ class social(commands.Cog):
 			on_click.kill()
 			return
 
-	@commands.command("comment", description="Comment a video! make sure to provide the video id only if you want to view comments if not then")
+	@commands.command("comment", description="Comment a video! make sure to only provide the video id if you want to view all comments if not then provide the comment msg to comment a video!")
+	@commands.cooldown(1, 3, commands.BucketType.user)
 	async def _comment(self, ctx, video_id, *,msg=None):
 		try:
 			video_id=int(video_id)
@@ -3214,6 +3343,15 @@ class social(commands.Cog):
 			return
 
 		if msg:
+			if len(msg) > 300:
+				await ctx.send(
+					embed=discord.Embed(
+						description="Your comment is too long! Maximum character is between 1 to 300 characters",
+						color=discord.Color.red()
+					)
+				)
+				return
+
 			await helper.comments(self.bot, ctx.author.id, video_id, msg)
 			await ctx.send("Posted your comment!")
 			
@@ -3293,6 +3431,11 @@ class social(commands.Cog):
 										label="Scrollup",
 										emoji="⏫",
 										custom_id="up"
+									),
+									Button(
+										style=ButtonStyle.red,
+										emoji="<:tick_no:874284510575996968>",
+										custom_id="delete-button"
 									)
 								),
 								ActionRow(
@@ -3330,6 +3473,11 @@ class social(commands.Cog):
 										label="Scrollup",
 										emoji="⏫",
 										custom_id="up"
+									),
+									Button(
+										style=ButtonStyle.red,
+										emoji="<:tick_no:874284510575996968>",
+										custom_id="delete-button"
 									)
 								),
 								ActionRow(
@@ -3344,18 +3492,27 @@ class social(commands.Cog):
 						)
 
 					while True:
-						inter = await ctx.wait_for_button_click(lambda inter: inter.message == embed and inter.channel == ctx.channel)
+						try:
+							inter = await ctx.wait_for_button_click(lambda inter: inter.message == embed and inter.channel == ctx.channel, timeout=15.0)
 						
-						if inter.author != ctx.author:
-							await inter.reply(embed=discord.Embed(
-								description="You are not the member who use this command!",
+							if inter.author != ctx.author:
+								await inter.reply(embed=discord.Embed(
+									description="You are not the member who use this command!",
+									color=discord.Color.red()
+								), 
+									ephemeral=True
+								)
+								
+							else:
+								break
+
+						except asyncio.TimeoutError:
+							await ctx.send(embed=discord.Embed(
+								title="Timeout!",
+								description="I have stop the command due to its long activity!",
 								color=discord.Color.red()
-							), 
-								ephemeral=True
-							)
-							
-						else:
-							break
+							))
+							return
 
 					button_id = inter.clicked_button.custom_id
 					if button_id == "up":
@@ -3367,7 +3524,7 @@ class social(commands.Cog):
 							page += 1
 							loop = False
 
-					if button_id == "down":
+					elif button_id == "down":
 						if page == 0:
 							page = (comments - 1)
 							loop=False
@@ -3376,12 +3533,21 @@ class social(commands.Cog):
 							page -= 1
 							loop = False
 
+					elif button_id == "delete-button":
+						await embed.delete()
+						await ctx.send(
+							embed=discord.Embed(
+							description=f"{ctx.author.mention} thanks for using Tango bot :blush:",
+							color=self.embed_color,
+						)
+					)
+						break
 			else:
 				try:
 					commenter=await helper.find_in_channel(data[page][0])
 				except IndexError:
 					await ctx.send(embed=discord.Embed(
-						description="This video doesnt have comments! be the first one who did! use `p!comment <video id> <message>` to comment a video! and use p!comment <video id> to look the comments list!",
+						description="This video doesn't have comments! be the first one who did! use `p!comment <video id> <message>` to comment the video! and use `p!comment <video id>` to look the comments list!",
 						color=discord.Color.red()
 					))
 					return
@@ -3425,6 +3591,7 @@ class social(commands.Cog):
 				)
 
 	@commands.command("delete", description="Delete a video through its ID")
+	@commands.cooldown(1, 5, commands.BucketType.user)
 	async def _delete(self, ctx, ID):
 		channel_data=await helper.find_in_channel(ctx.author.id)
 		info=await helper.find_in_info(ctx.author.id)
@@ -3451,7 +3618,7 @@ class social(commands.Cog):
 		
 		if data[0] != ctx.author.id:
 			await ctx.send(embed=discord.Embed(
-				description="Your not the owner who uploaded this video!",
+				description="You're not the owner who uploaded this video!",
 				color=discord.Color.red()
 			)) 
 			return
@@ -3498,7 +3665,7 @@ class social(commands.Cog):
 			]
 		)
 		file=await ctx.send(
-			'Search this video in nsfw channel!' if data[14] == 'y' else data[3],
+			'Search this video in nsfw channel!' if data[14] == 'y' and not ctx.channel.is_nsfw() else data[3],
 			components=[
 				ActionRow(
 					Button(
@@ -3594,6 +3761,751 @@ class social(commands.Cog):
 				]
 			)
 
+	@commands.command("bin", description="View your videos that got deleted!")
+	@commands.cooldown(1, 5, commands.BucketType.user)
+	async def _bin(self, ctx):
+		data=await helper.find_in_video(ctx.author.id, True, mode="all")
+		channel_data=await helper.find_in_channel(ctx.author.id)
+		info = await helper.find_in_info(ctx.author.id)
 		
+		if not channel_data:
+			await ctx.send(embed=self.channel_error)
+			return
+		
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
+
+		if not data:
+			await ctx.send(embed=discord.Embed(
+				description="All of your video is available!",
+				color=discord.Color.red()
+			))
+			return
+
+		i = 0
+		if len(data) > 1: 
+			while True:
+				raw_date=datetime.datetime.fromtimestamp(int(data[i][10]))
+				date_time=raw_date.strftime("%m/%d/%Y")
+				msg=await ctx.send(
+					embed=discord.Embed(
+						title='...' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][1],
+						url='' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+						description="This video is set to nsfw setting! Make sure to access this video in nsfw channels!" if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][2],
+						color=discord.Color.red() if data[i][14] == 'y' else self.embed_color
+						).set_footer(
+							text=f"Videos {i + 1}/{len(data)} | Date: {date_time} | ID: {data[i][11]}",
+							icon_url=channel_data[3]
+						).set_author(
+							name=f"{ctx.author.name} (@{channel_data[1]})",
+							icon_url=channel_data[3]
+						), components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="\U00002b05",
+									custom_id="left-button"
+								),
+								Button(
+									style=ButtonStyle.red,
+									label="",
+									emoji="<:tick_no:874284510575996968>",
+									custom_id="delete-button",
+								),
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="🔢",
+									custom_id="select-button",
+								),
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="\U000027a1",
+									custom_id="right-button"
+								)
+							)
+						]
+					)
+	
+				file=await ctx.send(
+					'Search this video in nsfw channel!' if data[i][14] == 'y' and not ctx.channel.is_nsfw() else data[i][3],
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.blurple,
+								label=data[i][4],
+								emoji="\U0001f465",
+								custom_id="view-button",
+								disabled=True
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label=channel_data[4],
+								emoji="<:user_icon:877535226694352946>",
+								custom_id="subs-button",
+								disabled=True
+							),
+							Button(
+								style=ButtonStyle.green,
+								label=data[i][5],
+								emoji="<:likes:875659362343993404>",
+								custom_id="like-button",
+								disabled=True
+							),
+							Button(
+								style=ButtonStyle.red,
+								label=data[i][6],
+								emoji="<:dislikes:875659362264309821>",
+								custom_id="dislike-button",
+								disabled=True
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label=date_time,
+								emoji="\U0000231b",
+								custom_id="time-button",
+								disabled=True
+							)
+						)
+					]
+				)
+
+				while True:
+					try:
+						inter = await ctx.wait_for_button_click(lambda inter: inter.author == ctx.author and inter.message.id == msg.id and inter.channel == ctx.channel, timeout=15)
+						if inter.author != ctx.author:
+							await inter.reply(embed=discord.Embed(
+								description="You are not the member who use this command!",
+								color=discord.Color.red()
+							),
+								ephemeral=True
+							)
+							
+						else:
+							break
+
+					except asyncio.TimeoutError:
+						await ctx.send(embed=discord.Embed(
+							title="Timeout!",
+							description="I have stop the command due to its long activity!",
+							color=discord.Color.red()
+						))
+						return
+
+				if inter.clicked_button.custom_id == "left-button": #Left Button
+					if i == 0:
+						i = (len(data) - 1)
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+					
+					else:
+						i -= 1
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+
+				elif inter.clicked_button.custom_id == "right-button":  #Right Button
+					if i == (len(data) - 1):
+						i = 0
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+
+					else:
+						i += 1
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+
+
+				elif inter.clicked_button.custom_id == "delete-button": #Delete Button
+					await msg.delete()
+					await file.delete()
+					await ctx.send(embed=discord.Embed(
+							description=f"{ctx.author.mention} thanks for using Tango bot :blush:",
+							color=self.embed_color,
+						)
+					)
+					break
+
+				elif inter.clicked_button.custom_id == "select-button": #Select Button
+					try:
+						await inter.reply(
+							ctx.author.mention, 
+							embed=discord.Embed(
+								description=f"What video you want to view? You have **{len(data)}** videos",
+								color=self.embed_color
+							))					
+						while True:
+							select=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=20)
+							page=0
+							try:
+								page=int(select.content)
+							except ValueError:
+								await asyncio.sleep(0.1)
+
+							if page > len(data):
+								await ctx.send("Number is Too large, enter it again with smaller one")
+								await asyncio.sleep(0.5)
+							
+							elif page <= 0:
+								await ctx.send("Number cannot be minus, zero, or letters enter it again with bigger one")
+								await asyncio.sleep(0.5)
+							
+							else:
+								page = page - 1
+								i = page
+								await msg.delete()
+								await file.delete()
+								await asyncio.sleep(0.5)
+								break
+
+					except Exception as e:
+						raise e
+
+		else:
+			i = 0
+			raw_date=datetime.datetime.fromtimestamp(int(data[i][10]))
+			date_time=raw_date.strftime("%m/%d/%Y")
+			msg=await ctx.send(
+			embed=discord.Embed(
+					title='...' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][1],
+					url='' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+					description="This video is set to nsfw setting! Make sure to access this video in nsfw channels!" if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][2],
+					color=discord.Color.red() if data[i][14] == 'y' else self.embed_color
+				).set_footer(
+					text=f"Videos 1/1 | Date: {date_time} | ID: {data[i][11]}",
+					icon_url=channel_data[3]
+				).set_author(
+					name=f"{ctx.author.name} (@{channel_data[1]})",
+					icon_url=channel_data[3]
+				)
+			)
+			file=await ctx.send(
+				'Search this video in nsfw channel!' if data[i][14] == 'y' and not ctx.channel.is_nsfw() else data[i][3],
+				components=[
+					ActionRow(
+						Button(
+							style=ButtonStyle.blurple,
+							label=data[i][4],
+							emoji="\U0001f465",
+							custom_id="view-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.grey,
+							label=channel_data[4],
+							emoji="<:user_icon:877535226694352946>",
+							custom_id="subs-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.green,
+							label=data[i][5],
+							emoji="<:likes:875659362343993404>",
+							custom_id="like-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.red,
+							label=data[i][6],
+							emoji="<:dislikes:875659362264309821>",
+							custom_id="dislike-button",
+							disabled=True
+						),
+						Button(
+							style=ButtonStyle.grey,
+							label=date_time,
+							emoji="\U0000231b",
+							custom_id="time-button",
+							disabled=True
+						)
+					)
+				]
+			)
+	@commands.command("recent", description="Give you the most recent video! if you dont provided the max videos it will give 10 automaticaly")
+	async def _recent(self, ctx, max=10):
+		info_data=await helper.find_in_info(ctx.author.id)		
+		channel_data=await helper.find_in_channel(ctx.author.id)
+
+		if not channel_data:
+			await ctx.send(embed=self.channel_error)
+			return
+
+		if info_data and info_data[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
+		
+		loop = True
+		i = 0
+		while True:
+			con=await helper.connect("db/video.db")
+			cur=await helper.cursor(con)
+
+			con2=await helper.connect("db/channel.db")
+			cur2=await helper.cursor(con2)
+
+			await cur.execute("SELECT * FROM video")
+			data=await cur.fetchall()
+			data=data[:max]
+			channel_data=await helper.find_in_channel(data[i][0])
+
+
+			try:
+				if loop == True:
+					old_views=ast.literal_eval(data[i][12])
+					if not str(ctx.author.id) in old_views:
+						old_views.append(str(ctx.author.id))
+						await cur.execute("UPDATE video SET old_views = ? WHERE link = ?", (str(old_views), data[i][3]))
+						await cur.execute("UPDATE video SET views = ? WHERE link = ?", (data[i][4] + 1 if int(data[i][0]) != ctx.author.id else data[i][4] + 0, data[i][3]))
+						await cur2.execute("UPDATE channel SET views = ? WHERE member_id = ?", (channel_data[7] + 1, data[i][0]))
+						
+					
+					raw_date=datetime.datetime.fromtimestamp(int(data[i][10]))
+					date_time=raw_date.strftime("%m/%d/%Y")
+					user=await self.bot.fetch_user(channel_data[0])
+					msg=await ctx.send(
+					embed=discord.Embed(
+						title='...' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][1],
+						url='' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+						description="This video is set to nsfw setting! Make sure to access this video in nsfw channels!" if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][2],
+						color=discord.Color.red() if data[i][14] == 'y' else self.embed_color
+					).set_footer(
+						text=f"Videos {i + 1}/{len(data)} | Date: {date_time} | ID: {data[i][11]}",
+						icon_url=channel_data[3]
+					).set_author(
+						name=f"{user.name} (@{channel_data[1]})",
+						icon_url=channel_data[3]
+					),
+						components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="\U00002b05",
+									custom_id="left-button"
+								),
+								Button(
+									style=ButtonStyle.red,
+									label="",
+									emoji="<:tick_no:874284510575996968>",
+									custom_id="delete-button",
+									disabled=False
+								),
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="\U000027a1",
+									custom_id="right-button"
+								)
+							)
+						]
+					) 
+					file=await ctx.send(
+						'Search this video in nsfw channel!' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+						components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label=data[i][4],
+									emoji="\U0001f465",
+									custom_id="view-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=channel_data[4],
+									emoji="<:user_icon:877535226694352946>",
+									custom_id="subs-button",
+									disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
+								),
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][5],
+									emoji="<:likes:875659362343993404>",
+									custom_id="like-button",
+									disabled=True if str(ctx.author.id) in data[i][7] else False
+								),
+								Button(
+									style=ButtonStyle.red,
+									label=data[i][6],
+									emoji="<:dislikes:875659362264309821>",
+									custom_id="dislike-button",
+									disabled=True if str(ctx.author.id) in data[i][8] else False
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=date_time,
+									emoji="\U0000231b",
+									custom_id="time-button",
+									disabled=True
+								)
+							)
+						]
+					)
+
+					await con.commit()
+					await con2.commit()
+
+				while True:
+					try:
+						inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel, timeout=100)	
+						if inter.author != ctx.author:
+							await inter.reply(embed=discord.Embed(
+								description="You are not the member who use this command!",
+								color=discord.Color.red()
+							), 
+								ephemeral=True
+							)
+							
+						else:
+							break
+
+					except asyncio.TimeoutError:
+						await msg.delete()
+						await file.delete()
+						await ctx.send(embed=discord.Embed(
+							title="Timeout",
+							description="I have stop the command due to its long activity!",
+							color=discord.Color.red()
+						))
+						return
+
+				button_id = inter.clicked_button.custom_id
+				if button_id == "right-button":  #Right Button
+					loop = True
+					if i == (len(data) - 1):
+						i = 0
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+
+					else:
+						i += 1
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+
+					await cur.close()
+					await cur2.close()
+					await con.close()
+					await con2.close()
+
+				elif button_id == "left-button": #Left Button
+					loop = True
+					if inter.author == ctx.author:
+						i = (len(data) - 1)
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+					
+					else:
+						i -= 1
+						await msg.delete()
+						await file.delete()
+						await asyncio.sleep(0.5)
+
+					await cur.close()
+					await cur2.close()
+					await con.close()
+					await con2.close()
+
+				elif button_id == "delete-button": #Delete Button
+					await msg.delete()
+					await file.delete()
+					await ctx.send(embed=discord.Embed(
+							description=f"{ctx.author.mention} thanks for using Tango bot :blush:",
+							color=self.embed_color,
+						)
+					)
+					
+					await cur.close()
+					await cur2.close()
+					await con.close()
+					await con2.close()
+					break
+
+				elif button_id == "subs-button":
+					subs=ast.literal_eval(channel_data[11])
+					if not str(ctx.author.id) in subs:
+						subs.append(str(ctx.author.id))
+	
+						await inter.send(embed=discord.Embed(
+							description=f"{ctx.author.mention} Sub the channel!",
+							color=self.embed_color
+						),
+							ephemeral=True
+						)
+		
+						await cur2.execute("UPDATE channel SET subscribers = subscribers + 1 WHERE member_id = ?", (channel_data[0],))
+						await cur2.execute("UPDATE channel SET old_subs = ? WHERE member_id = ?", (str(subs), channel_data[0]))
+						await con2.commit()
+
+					await file.edit(
+						content=data[i][3],
+						components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label=data[i][4],
+									emoji="\U0001f465",
+									custom_id="view-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=channel_data[4] + 1,
+									emoji="<:user_icon:877535226694352946>",
+									custom_id="subs-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][5],
+									emoji="<:likes:875659362343993404>",
+									custom_id="like-button",
+									disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][7]) else False 
+								),
+								Button(
+									style=ButtonStyle.red,
+									label=data[i][6],
+									emoji="<:dislikes:875659362264309821>",
+									custom_id="dislike-button",
+									disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][8]) else False
+								)
+							)
+						]
+					)
+
+					loop = False
+					await cur2.close()
+					await con2.close()
+
+				elif button_id == "like-button": #Like Button
+					likes=ast.literal_eval(data[i][7]) #list member who liked
+					dislikes=ast.literal_eval(data[i][8]) #list member who disliked
+					await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] + 1, data[i][0]))
+
+
+					if not str(ctx.author.id) in likes:
+						likes.append(str(ctx.author.id))
+						
+		
+					if str(ctx.author.id) in dislikes:
+						dislikes.remove(str(ctx.author.id))
+						await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][3])))
+						await cur.execute("UPDATE video SET dislikes = ? WHERE link = ?", (data[i][6] - 1, str(data[i][3])))
+						await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] - 1, data[i][0]))
+					
+					
+					await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][3])))
+					await cur.execute("UPDATE video SET likes = ? WHERE link = ?", (int(data[i][5]) + 1, str(data[i][3])))
+
+					await con.commit()
+					await con2.commit()
+
+					await inter.send(embed=discord.Embed(
+						description=f"{ctx.author.mention} Liked this video!",
+						color=self.embed_color
+					),
+						ephemeral=True
+					)
+
+					await file.edit(
+						content='Search this video in nsfw channel!' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+						components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label=data[i][4],
+									emoji="\U0001f465",
+									custom_id="view-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=channel_data[4],
+									emoji="<:user_icon:877535226694352946>",
+									custom_id="subs-button",
+									disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
+								),
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][5] + 1,
+									emoji="<:likes:875659362343993404>",
+									custom_id="like-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.red,
+									label=data[i][6] - 1 if str(ctx.author.id) in ast.literal_eval(data[i][8]) else data[i][5],
+									emoji="<:dislikes:875659362264309821>",
+									custom_id="dislike-button",
+									disabled=False
+								)
+							)
+						]
+					)
+					
+					loop = False
+					await cur.close()
+					await cur2.close()
+					await con.close()
+					await con2.close()
+							
+				elif button_id == "dislike-button": #Dislike Button
+					likes=ast.literal_eval(data[i][7])
+					dislikes=ast.literal_eval(data[i][8])
+					await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] + 1, data[i][0]))
+
+					if not str(ctx.author.id) in dislikes:
+						dislikes.append(str(ctx.author.id))
+						
+					if str(ctx.author.id) in likes:
+						likes.remove(str(ctx.author.id))
+						await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][3])))
+						await cur.execute("UPDATE video SET likes = ? WHERE link = ?", (data[i][5] - 1, str(data[i][3])))
+						await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] - 1, data[i][0]))
+					
+					
+					
+					await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][3])))
+					await cur.execute("UPDATE video SET dislikes = ? WHERE link = ?", (int(data[i][6]) + 1, str(data[i][3])))
+					
+					
+					await con.commit()
+					await con2.commit()
+
+					await inter.send(embed=discord.Embed(
+						description=f"{ctx.author.mention} Disliked this video!",
+						color=self.embed_color
+					),
+						ephemeral=True
+					)
+					
+					await file.edit(
+						content='Search this video in nsfw channel!' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+						components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label=data[i][4],
+									emoji="\U0001f465",
+									custom_id="view-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=channel_data[4],
+									emoji="<:user_icon:877535226694352946>",
+									custom_id="subs-button",
+									disabled=True if str(ctx.author.id) in ast.literal_eval(channel_data[11]) else False
+								),
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][5] - 1 if str(ctx.author.id) in ast.literal_eval(data[i][7]) else data[i][5],
+									emoji="<:likes:875659362343993404>",
+									custom_id="like-button",
+									disabled=False
+								),
+								Button(
+									style=ButtonStyle.red,
+									label=data[i][6] + 1,
+									emoji="<:dislikes:875659362264309821>",
+									custom_id="dislike-button",
+									disabled=True
+								)
+							)
+						]
+					)
+					loop = False
+					await cur.close()
+					await cur2.close()
+					await con.close()
+					await con2.close()
+
+			except Exception as e:
+				raise e
+		 
+	@commands.command("history", description="Show a list of videos that you viewed before! If you dont provided max videos it will automatically send 10!")
+	async def _history(self, ctx, max=10):
+		con=await helper.connect("db/info.db")
+		cur=await helper.cursor(con)
+
+		info=await helper.find_in_info(ctx.author.id)
+
+		if not info:
+			await ctx.send(embed=self.channel_error)
+			return
+
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
+
+		await cur.execute("SELECT * FROM video WHERE member_id = ?", (ctx.author.id,))
+		data=await cur.fetchone()
+		history=ast.literal_eval(data[6])
+
+		while True:
+			#Do something here soon
+			pass
+		
+	@commands.command("reupload")
+	async def _reupload(self, ctx, video_ID):
+		con=await helper.connect("db/video.db")
+		cur=await helper.cursor(con)
+
+		channel=await helper.find_in_channel(ctx.author.id)
+		info=await helper.find_in_info(ctx.author.id)
+		
+		await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,))
+		data=await cur.fetchone()
+
+		if not channel:
+			await ctx.send(embed=self.channel_error)
+			return
+
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
+
+		if not data:
+			await ctx.send(embed=discord.Embed(
+				description="You put a wrong ID!",
+				color=discord.Color.red()
+			))
+			return
+
+		if data[13] == 'n':
+			await ctx.send(embed=discord.Embed(
+				description="That video is already available!",
+				color=discord.Color.red()
+			))
+			return
+
+		if data[0] != ctx.author.id:
+			await ctx.send(embed=discord.Embed(
+				description="Your not the owner who uploaded this command!",
+				color=discord.Color.red()
+			))
+			return
+
+		try:
+			await cur.execute("UPDATE video SET deleted = ? WHERE ID = ?", ('n', video_ID))
+			await con.commit()
+			await cur.close()
+			await con.close()
+
+			await ctx.send(f"You reuploaded that video! Check it using `p!view {video_ID}`")
+		except Exception as e:
+			raise e 	
+
+		
+	
+
 def setup(bot):
 	bot.add_cog(social(bot))
