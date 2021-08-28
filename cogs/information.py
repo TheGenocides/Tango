@@ -12,6 +12,8 @@ class information(commands.Cog):
 		self.bot = bot
 		self.launch_time = datetime.datetime.utcnow()
 
+	
+
 	@commands.command("vote", description="Get a link for voting TangoBot!")
 	@commands.cooldown(1, 3, commands.BucketType.user)
 	async def _vote(self, ctx):

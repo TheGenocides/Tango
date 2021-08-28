@@ -3,13 +3,12 @@ import helper
 import os
 import difflib
 import datetime
-import shutil
 import traceback
 
 #======================
 
 from discord.ext import commands
-from dislash import SlashClient, Option, Type
+from dislash import SlashClient, Option, Type, InteractionClient
 
 class Tango(commands.Bot):
 	def __init__(self):#Bubble-gum blue, Sakura pink
@@ -39,6 +38,8 @@ class Tango(commands.Bot):
 
 	async def on_ready(self):
 		await self.wait_until_ready()
+		slash=InteractionClient(self)
+
 		db=await helper.connect("db/channel.db")
 		cur=await helper.cursor(db)
 		await cur.execute("""
@@ -245,7 +246,7 @@ class HelpPage(commands.HelpCommand):
 		return command.signature if command.signature else " "
 
 	async def send_bot_help(self, mapping):
-		cog_description={"owner": "These command can only use by one of the owner of the bot.", "fun": "Commands that can be use by all members without any specific permissions or roles.", "social": "Social is a group of commands that contain most of the commands that other can use!", "jishaku": "Jishaku commands", "information": "Commands that have all information that you need about Tango bot"}
+		cog_description={"owner": "These command can only use by one of the owner of the bot.", "fun": "Commands that can be use by all members without any specific permissions or roles.", "social": "Social is a command category that contain commands that related to Social Media!", "jishaku": "Jishaku commands", "information": "Commands that have all information that you need about Tango bot"}
 		
 		emojis={"owner": "<:Tango:878902180856352848>", "fun": "🤡", "social": "<:follow:879722735788519444>", "jishaku": "⚙️", "information": "🛑"}
 		em=discord.Embed(
@@ -271,7 +272,7 @@ class HelpPage(commands.HelpCommand):
 			icon_url=self.context.author.avatar_url
 		)
 		em.set_footer(
-			text=self.get_ending_note(True),
+			text=self.get_ending_note(True) + " Or click the buttons to move the page!",
 			icon_url=self.context.author.avatar_url
 		)
 		channel=self.get_destination()
@@ -351,7 +352,7 @@ class HelpPage(commands.HelpCommand):
 			name=self.context.author,
 			icon_url=self.context.author.avatar_url
 		).set_footer(
-			text=f"Requested by self.context.author",
+			text=f"Requested by {self.context.author}",
 			icon_url=self.context.author.avatar_url
 		)
 		
@@ -420,7 +421,7 @@ async def _profile(inter):
 	if not data or not info:
 		await inter.respond(
 			embed=discord.Embed(
-			description="You haven't made your channel, Use p!start command! (Start command is under renovation)",
+			description=f"{inter.author.name} haven't made a channel, Use p!start command!",
 			color=discord.Color.red()
 			)
 		)
@@ -486,7 +487,7 @@ async def _Profile(inter):
 	if not data:
 		await inter.respond(
 			embed=discord.Embed(
-			description="You haven't made your channel, Use p!start command! (Start command is under renovation)",
+			description=f"{inter.author.name} haven't made a channel, Use p!start command! (Start command is under renovation)",
 			color=discord.Color.red()
 			)
 		)

@@ -13,7 +13,13 @@ class fun(commands.Cog):
 	"""Fun Command for Tango bot"""
 	def __init__(self, bot):
 		self.bot = bot
-		
+	
+	@commands.command('leave', description="Make me leave this guild :(")
+	@commands.has_permissions(kick_members=True)
+	async def _leave(self, ctx):
+		await ctx.send("Byee :(")
+		await ctx.guild.leave()
+
 	@commands.group(invoked_without_command=True)
 	@commands.cooldown(1, 3, commands.BucketType.user)
 	async def anime(self, ctx):

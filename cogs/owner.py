@@ -22,11 +22,11 @@ class owner(commands.Cog):
 		
 	@commands.command("info_data", description="Get someone videos data!")
 	@commands.is_owner()
-	async def _info_data(self, ctx):
+	async def _info_data(self, ctx, ID):
 		con=await helper.connect("db/info.db")
 		cur=await helper.cursor(con)
-		await cur.execute("SELECT * FROM info")
-		print(await cur.fetchall())
+		await cur.execute("SELECT * FROM info WHERE member_id = ?", (ID,))
+		await ctx.author.send(await cur.fetchone())
 
 	@commands.command("video_data", description="Get someone videos data!")
 	@commands.is_owner()
@@ -44,14 +44,14 @@ class owner(commands.Cog):
 
 	@commands.command("delete_account")
 	@commands.is_owner()
-	async def _delete_account(self, ctx):
+	async def _delete_account(self, ctx, ID:int):
 		con=await helper.connect('db/channel.db')
 		con2=await helper.connect('db/info.db')
 		cur=await helper.cursor(con)
 		cur2=await helper.cursor(con2)
 
-		await cur.execute("DELETE FROM channel WHERE member_id = ?", (ctx.author.id,))
-		await cur2.execute("DELETE FROM info WHERE member_id = ?", (ctx.author.id,))
+		await cur.execute("DELETE FROM channel WHERE member_id = ?", (ID,))
+		await cur2.execute("DELETE FROM info WHERE member_id = ?", (ID,))
 
 		await con.commit()
 		await con2.commit()
@@ -80,7 +80,7 @@ class owner(commands.Cog):
 	@commands.is_nsfw()
 	async def _screenshot(self, ctx, *,name: str):
 		await ctx.send(embed=discord.Embed(
-			color=discord.Color.orange()
+			color=discord.Color.from_rgb(136, 223 ,251)
 		).set_image(
 			url=f"https://image.thum.io/get/width/3000/height/3000/http://www.{name}.com/"
 		))
