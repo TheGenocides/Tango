@@ -12,13 +12,6 @@ class information(commands.Cog):
 		self.bot = bot
 		self.launch_time = datetime.datetime.utcnow()
 
-	
-
-	@commands.command("vote", description="Get a link for voting TangoBot!")
-	@commands.cooldown(1, 3, commands.BucketType.user)
-	async def _vote(self, ctx):
-		await ctx.send("Considering voting me on DBL list! https://disbotlist.xyz/bot/806725119917162527/")
-
 	@commands.command("uptime", description="Show the bot uptime")
 	@commands.cooldown(1, 3, commands.BucketType.user)
 	async def _uptime(self, ctx):
@@ -51,7 +44,7 @@ Thats all for today folks!
 See you next time!""",
 			color=discord.Color.orange()
 		).set_footer(
-			text="• Last updated 8/24/2021"
+			text="• Last updated 8/27/2021"
 		))
 	@commands.command("ping", description="Show the bot latency")
 	@commands.cooldown(1, 3, commands.BucketType.user)
@@ -104,7 +97,17 @@ See you next time!""",
 				inline=False
 			))
 
-			
+	@commands.command("vote", description="Get a link for voting TangoBot!")
+	@commands.cooldown(1, 3, commands.BucketType.user)
+	async def _vote(self, ctx):
+		await ctx.send("Considering voting me on DBL list! https://disbotlist.xyz/bot/806725119917162527/")
+
+	@commands.command("invite", description="Get a link for inviting TangoBot!")
+	@commands.cooldown(1, 3, commands.BucketType.user)
+	async def _invite(self, ctx):
+		await ctx.send("You can invite me by clicking this link!\nhttps://bit.ly/3BbyPIE")
+
+	
 
 def setup(bot):
 	bot.add_cog(information(bot))

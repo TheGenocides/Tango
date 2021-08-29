@@ -4,6 +4,7 @@ import os
 import sys
 import traceback
 import helper
+import aiohttp
 
 from discord.ext import commands
 
@@ -11,6 +12,8 @@ class owner(commands.Cog):
 	"""Only owner can use these commands"""
 	def __init__(self, bot):
 		self.bot = bot
+
+ 
 
 	@commands.command("channel_data", description="Get someone videos data!")
 	@commands.is_owner()
@@ -68,7 +71,7 @@ class owner(commands.Cog):
 		cur=await helper.cursor(con)
 
 
-		await cur.execute("UPDATE info SET viewed = ? WHERE member_id = ?", ("['2376212112']", ctx.author.id))
+		await cur.execute("UPDATE info SET liked = ? WHERE member_id = ?", ("['1335245607', '1943349997']", ctx.author.id))
 
 		await con.commit()
 		await cur.close()

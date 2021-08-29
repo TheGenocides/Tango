@@ -122,7 +122,6 @@ class Tango(commands.Bot):
 		
 
 	async def on_command_error(self, ctx, error):
- 
 		NotOwner="<Not Owner>"
 		if isinstance(error, (commands.MissingRole, commands.MissingAnyRole)):
 			print(error.__class__)
@@ -190,6 +189,7 @@ class Tango(commands.Bot):
 
 			await ctx.send(embed=em)
 			return
+
 		elif isinstance(error, commands.CommandOnCooldown):
 			msg = f'**Command Still on cooldown**, please try again in **{error.retry_after:.2f}s** or wait untill this message got deleted!'
 			await ctx.send(
@@ -207,9 +207,11 @@ class Tango(commands.Bot):
 		)
 
 		else:
-			await ctx.send(embed=discord.Embed(
+			await ctx.send(
+				"discord.gg/XHBhg6A4jJ",
+				embed=discord.Embed(
 				title="Error",
-				description="An unexpected error has occured! I have notify my owner to fix this error!",
+				description="An unexpected error has occured! I have notify my owner to fix this error! Join the support server to notify the owner directly!",
 				color=discord.Color.red()
 			))
 

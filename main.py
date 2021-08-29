@@ -2,10 +2,10 @@ import bot
 import os
 import helper
 import asyncio
+import aiohttp
 
 from discord.ext import tasks
 from dotenv import load_dotenv 
-from dislash import InteractionClient
 
 bot=bot.Tango()
 bot.processing_commands = 0
@@ -39,6 +39,13 @@ async def _Clear_history():
 	except Exception as e:
 		raise e
 
+@tasks.loop(seconds=5000)
+async def _Change_server_Count():
+	async with aiohttp.ClientSession() as session:
+		url="https://disbotlist.xyz/api/bots/stats"
+		headers={"ServerCount": str(len(bot.guilds)), "Authorization": os.environ['dbl']}
+		async with session.post(url, headers=headers) as response:
+			pass
 
 load_dotenv()
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
@@ -46,4 +53,5 @@ os.environ["JISHAKU_RETAIN"] = "True"
 
 _Database_backup.start()
 _Clear_history.start()
+_Change_server_Count.start()
 bot._run_(os.environ["GAM"])

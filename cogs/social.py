@@ -37,7 +37,7 @@ class social(commands.Cog):
 	
 
 	@commands.command("profile", description="Profile command can let you see your channel stats!")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _profile(self, ctx):
 		data=await helper.find_in_channel(ctx.author.id)
 		info=await helper.find_in_info(ctx.author.id)
@@ -101,7 +101,7 @@ class social(commands.Cog):
 				)		
 
 	@commands.command("start", description="Make your Tango bot account")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _start(self, ctx):
 		# if not ctx.author.id in self.bot.owner_ids:
 		# 	await ctx.send("This cmd is other renovation")
@@ -568,7 +568,7 @@ class social(commands.Cog):
 			))
 
 	@commands.command("upload",  description="Upload a video!", aliases=['post', "up"])
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _upload(self, ctx):
 
 		# if not ctx.author.id in self.bot.owner_ids:
@@ -1069,7 +1069,7 @@ class social(commands.Cog):
 			raise e from e
 
 	@commands.command("videos",  description="Check up your videos")
-	@commands.cooldown(1, 4, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _videos(self, ctx):
 		
 		data=await helper.find_in_video(ctx.author.id, False, mode="all")
@@ -1336,11 +1336,11 @@ class social(commands.Cog):
 			)		
 
 	@commands.command("view", description="View a video with its ID")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _view(self, ctx, *,video_ID):
-		if not ctx.author.id in self.bot.owner_ids:
-			await ctx.send("This command is under renovation. Comeback after 30 mins!")
-			return
+		# if not ctx.author.id in self.bot.owner_ids:
+		# 	await ctx.send("This command is under renovation. Comeback after 30 mins!")
+		# 	return
 		
 		loop=True
 		con=await helper.connect('db/video.db')
@@ -1605,17 +1605,39 @@ class social(commands.Cog):
 				elif button_id == "like-button": #Like Button
 					likes=ast.literal_eval(data[i][6]) #list member who likes
 					dislikes=ast.literal_eval(data[i][7]) #list member who dislikes
-
 	
 					if not str(ctx.author.id) in likes:
 						likes.append(str(ctx.author.id))
 						await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] + 1, data[i][8]))
+						#Added to a string-list in sql to be use in liked commands
+						con3=await helper.connect('db/info.db')
+						cur3=await helper.cursor(con3)
+						info_data_=await helper.find_in_info(ctx.author.id)
+						info_data_=ast.literal_eval(info_data_[8])
+						info_data_.append(data[i][10])
+						await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+						await con3.commit()
+						await cur3.close()
+						await con3.close()
+						
 		
 					if str(ctx.author.id) in dislikes:
 						dislikes.remove(str(ctx.author.id))
 						await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][0])))
 						await cur.execute("UPDATE video SET dislikes = ? WHERE link = ?", (data[i][5] - 1, str(data[i][0])))
 						await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] - 1, data[i][8]))
+						try:
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[9])
+							info_data_.remove(data[i][10])
+							await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
+						except:
+							pass
 					
 					
 					await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][0])))
@@ -1682,11 +1704,34 @@ class social(commands.Cog):
 						dislikes.append(str(ctx.author.id))
 						await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] + 1, data[i][8]))
 
+						con3=await helper.connect('db/info.db')
+						cur3=await helper.cursor(con3)
+						info_data_=await helper.find_in_info(ctx.author.id)
+						info_data_=ast.literal_eval(info_data_[9])
+						info_data_.append(data[i][10])
+						await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+						await con3.commit()
+						await cur3.close()
+						await con3.close()
+						
+
 					if str(ctx.author.id) in likes:
 						likes.remove(str(ctx.author.id))
 						await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][0])))
 						await cur.execute("UPDATE video SET likes = ? WHERE link = ?", (data[i][4] - 1, str(data[i][0])))
 						await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] - 1, data[i][8]))
+						try:
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[8])
+							info_data_.remove(data[i][10])
+							await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
+						except:
+							pass
 					
 					
 					
@@ -1750,11 +1795,18 @@ class social(commands.Cog):
 
 			
 	@commands.command("search", description="Search up videos that got posted by other members!")
-	@commands.cooldown(1, 6, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _search(self, ctx, *,name):
 		loop=True
-		if not ctx.author.id in self.bot.owner_ids:
-			await ctx.send("This command is under renovation. Comeback after 30 mins!")
+		data_channel=await helper.find_in_channel(ctx.author.id)
+		data_info=await helper.find_in_info(ctx.author.id)
+
+		if not data_channel or not data_info:
+			await ctx.send(embed=self.channel_error)
+			return
+
+		if data_info[2] == 'no':
+			await ctx.send(embed=self.login_error)
 			return
 
 		if not len(name) >= 3:
@@ -2048,13 +2100,33 @@ class social(commands.Cog):
 
 						if not str(ctx.author.id) in likes:
 							likes.append(str(ctx.author.id))
-							
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[8])
+							info_data_.append(data[i][10])
+							await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
 			
 						if str(ctx.author.id) in dislikes:
 							dislikes.remove(str(ctx.author.id))
 							await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][0])))
 							await cur.execute("UPDATE video SET dislikes = ? WHERE link = ?", (data[i][5] - 1, str(data[i][0])))
 							await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] - 1, data[i][8]))
+							try:
+								con3=await helper.connect('db/info.db')
+								cur3=await helper.cursor(con3)
+								info_data_=await helper.find_in_info(ctx.author.id)
+								info_data_=ast.literal_eval(info_data_[9])
+								info_data_.remove(data[i][10])
+								await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+								await con3.commit()
+								await cur3.close()
+								await con3.close()
+							except:
+								pass
 						
 						
 						await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][0])))
@@ -2119,12 +2191,33 @@ class social(commands.Cog):
 
 						if not str(ctx.author.id) in dislikes:
 							dislikes.append(str(ctx.author.id))
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[9])
+							info_data_.append(data[i][10])
+							await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
 							
 						if str(ctx.author.id) in likes:
 							likes.remove(str(ctx.author.id))
 							await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][0])))
 							await cur.execute("UPDATE video SET likes = ? WHERE link = ?", (data[i][4] - 1, str(data[i][0])))
 							await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] - 1, data[i][8]))
+							try:
+								con3=await helper.connect('db/info.db')
+								cur3=await helper.cursor(con3)
+								info_data_=await helper.find_in_info(ctx.author.id)
+								info_data_=ast.literal_eval(info_data_[8])
+								info_data_.remove(data[i][10])
+								await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+								await con3.commit()
+								await cur3.close()
+								await con3.close()
+							except:
+								pass
 						
 						
 						
@@ -2425,12 +2518,34 @@ class social(commands.Cog):
 						if not str(ctx.author.id) in likes:
 							likes.append(str(ctx.author.id))
 							await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] + 1, data[i][8]))
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[8])
+							info_data_.append(data[i][10])
+							await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
 			
 						if str(ctx.author.id) in dislikes:
 							dislikes.remove(str(ctx.author.id))
 							await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][0])))
 							await cur.execute("UPDATE video SET dislikes = ? WHERE link = ?", (data[i][5] - 1, str(data[i][0])))
 							await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] - 1, data[i][8]))
+							#UWUOWOIVI
+							try:
+								con3=await helper.connect('db/info.db')
+								cur3=await helper.cursor(con3)
+								info_data_=await helper.find_in_info(ctx.author.id)
+								info_data_=ast.literal_eval(info_data_[9])
+								info_data_.remove(data[i][10])
+								await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+								await con3.commit()
+								await cur3.close()
+								await con3.close()
+							except:
+								pass
 						
 						
 						await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][0])))
@@ -2497,12 +2612,33 @@ class social(commands.Cog):
 							dislikes.append(str(ctx.author.id))
 							await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] + 1, data[i][8]))
 
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[9])
+							info_data_.append(data[i][10])
+							await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
+
 						if str(ctx.author.id) in likes:
 							likes.remove(str(ctx.author.id))
 							await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][0])))
 							await cur.execute("UPDATE video SET likes = ? WHERE link = ?", (data[i][4] - 1, str(data[i][0])))
 							await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] - 1, data[i][8]))
-						
+							try:
+								con3=await helper.connect('db/info.db')
+								cur3=await helper.cursor(con3)
+								info_data_=await helper.find_in_info(ctx.author.id)
+								info_data_=ast.literal_eval(info_data_[8])
+								info_data_.remove(data[i][10])
+								await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+								await con3.commit()
+								await cur3.close()
+								await con3.close()
+							except:
+								pass
 						
 						
 						await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][0])))
@@ -2579,7 +2715,7 @@ class social(commands.Cog):
 		)
 	
 	@commands.command("setting", description="Setting up your channel and profile info", aliases=['set'])
-	@commands.cooldown(1, 4, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _setting(self, ctx):
 
 
@@ -2833,7 +2969,7 @@ class social(commands.Cog):
 
 
 	@commands.command("login", description="Use for login to your account by entering the account email and password!")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _login(self, ctx):
 
 		data=await helper.find_in_info(ctx.author.id)
@@ -3223,7 +3359,7 @@ class social(commands.Cog):
 
 
 	@commands.command("logout", description="Logout from an account!")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _logout(self, ctx):
 
 		data=await helper.find_in_channel(ctx.author.id)
@@ -3359,7 +3495,7 @@ class social(commands.Cog):
 			return
 
 	@commands.command("comment", description="Comment a video! make sure to only provide the video id if you want to view all comments if not then provide the comment msg to comment a video!")
-	@commands.cooldown(1, 3, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _comment(self, ctx, video_id, *,msg=None):
 		try:
 			video_id=int(video_id)
@@ -3637,7 +3773,7 @@ class social(commands.Cog):
 				)
 
 	@commands.command("delete", description="Delete a video through its ID")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _delete(self, ctx, ID):
 		channel_data=await helper.find_in_channel(ctx.author.id)
 		info=await helper.find_in_info(ctx.author.id)
@@ -3808,7 +3944,7 @@ class social(commands.Cog):
 			)
 
 	@commands.command("bin", description="View your videos that got deleted!")
-	@commands.cooldown(1, 5, commands.BucketType.user)
+	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _bin(self, ctx):
 		data=await helper.find_in_video(ctx.author.id, True, mode="all")
 		channel_data=await helper.find_in_channel(ctx.author.id)
@@ -4383,13 +4519,35 @@ class social(commands.Cog):
 
 					if not str(ctx.author.id) in likes:
 						likes.append(str(ctx.author.id))
+						con3=await helper.connect('db/info.db')
+						cur3=await helper.cursor(con3)
+						info_data_=await helper.find_in_info(ctx.author.id)
+						info_data_=ast.literal_eval(info_data_[8])
+						info_data_.append(data[i][11])
+						await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+						await con3.commit()
+						await cur3.close()
+						await con3.close()
 						
-		
+
 					if str(ctx.author.id) in dislikes:
 						dislikes.remove(str(ctx.author.id))
 						await cur.execute("UPDATE video SET old_dislikes = ? WHERE link = ?", (str(dislikes), str(data[i][3])))
 						await cur.execute("UPDATE video SET dislikes = ? WHERE link = ?", (data[i][6] - 1, str(data[i][3])))
 						await cur2.execute("UPDATE channel SET dislikes = ? WHERE member_id = ?", (channel_data[6] - 1, data[i][0]))
+
+						try:
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[9])
+							info_data_.remove(data[i][11])
+							await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
+						except:
+							pass
 					
 					
 					await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][3])))
@@ -4461,12 +4619,33 @@ class social(commands.Cog):
 
 					if not str(ctx.author.id) in dislikes:
 						dislikes.append(str(ctx.author.id))
+						con3=await helper.connect('db/info.db')
+						cur3=await helper.cursor(con3)
+						info_data_=await helper.find_in_info(ctx.author.id)
+						info_data_=ast.literal_eval(info_data_[9])
+						info_data_.append(data[i][11])
+						await cur3.execute("UPDATE info SET disliked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+						await con3.commit()
+						await cur3.close()
+						await con3.close()
 						
 					if str(ctx.author.id) in likes:
 						likes.remove(str(ctx.author.id))
 						await cur.execute("UPDATE video SET old_likes = ? WHERE link = ?", (str(likes), str(data[i][3])))
 						await cur.execute("UPDATE video SET likes = ? WHERE link = ?", (data[i][5] - 1, str(data[i][3])))
 						await cur2.execute("UPDATE channel SET likes = ? WHERE member_id = ?", (channel_data[5] - 1, data[i][0]))
+						try:
+							con3=await helper.connect('db/info.db')
+							cur3=await helper.cursor(con3)
+							info_data_=await helper.find_in_info(ctx.author.id)
+							info_data_=ast.literal_eval(info_data_[8])
+							info_data_.remove(data[i][11])
+							await cur3.execute("UPDATE info SET liked = ? WHERE member_id = ?", (str(info_data_), ctx.author.id))
+							await con3.commit()
+							await cur3.close()
+							await con3.close()
+						except:
+							pass
 					
 					
 					
@@ -4558,7 +4737,7 @@ class social(commands.Cog):
 		data=ast.literal_eval(history[0][6])
 		if max_video > len(data):
 			await ctx.send(embed=discord.Embed(
-				description=f"There's is Nothing to find in your histroy! History get clear every 30 minutes",
+				description=f"There's Nothing to find in your history! History get clear every 30 minutes",
 				color=self.embed_color
 			).set_footer(
 				text="Use p!help history for more info about the command!",
@@ -4775,6 +4954,17 @@ async def _reupload(self, ctx, video_ID):
 	con=await helper.connect("db/video.db")
 	cur=await helper.cursor(con)
 
+	data_channel=await helper.find_in_channel(ctx.author.id)
+	data_info=await helper.find_in_info(ctx.author.id)
+
+	if not data_channel or not data_info:
+		await ctx.send(embed=self.channel_error)
+		return
+
+	if data_info[2] == 'no':
+		await ctx.send(embed=self.login_error)
+		return
+
 	channel=await helper.find_in_channel(ctx.author.id)
 	info=await helper.find_in_info(ctx.author.id)
 	
@@ -4820,7 +5010,6 @@ async def _reupload(self, ctx, video_ID):
 
 	except Exception as e:
 		raise e 	
-
 		
 
 

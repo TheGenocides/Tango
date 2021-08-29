@@ -1,0 +1,8 @@
+Update 0.2.4
+1. Make log in Liked and Disliked in:
+Y view
+Y recent
+Y search
+
+Update 0.2.8
+1. Liked, Disliked, Following/Followers Commands! 
