@@ -50,18 +50,25 @@ class owner(commands.Cog):
 	async def _delete_account(self, ctx, ID:int):
 		con=await helper.connect('db/channel.db')
 		con2=await helper.connect('db/info.db')
+		con3=await helper.connect('db/video.db')
+
 		cur=await helper.cursor(con)
 		cur2=await helper.cursor(con2)
+		cur3=await helper.cursor(con3)
 
 		await cur.execute("DELETE FROM channel WHERE member_id = ?", (ID,))
 		await cur2.execute("DELETE FROM info WHERE member_id = ?", (ID,))
+		await cur3.execute("DELETE FROM video WHERE member_id = ?", (ID,))
 
 		await con.commit()
 		await con2.commit()
+		await con3.commit()
 		await cur.close()
 		await cur2.close()
+		await cur3.close()
 		await con.close()
 		await con2.close()
+		await con3.close()
 	
  
 	@commands.command()

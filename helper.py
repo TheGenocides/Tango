@@ -141,5 +141,9 @@ async def is_nsfw(ID):
  
 def anime(name):
 	anime = animec.Anime(name)
-	data=(anime.name, anime.url, anime.description, anime.poster, anime.episodes, anime.aired, anime.teaser, random.choice(anime.opening_themes), random.choice(anime.ending_themes), anime.ranked, anime.genres, anime.type, anime.status, anime.rating, anime.popularity, anime.producers)
+	data=(anime.name, anime.url, anime.description, anime.poster, anime.episodes, anime.aired, anime.teaser, random.choice(anime.opening_themes), random.choice(anime.ending_themes), anime.ranked, anime.genres, anime.type, anime.status, anime.rating, anime.popularity, anime.producers, anime.is_nsfw())
 	return data
+
+def lyric(name):
+	lyric=animec.Anilyrics(name)
+	return (lyric.url, lyric.english(), lyric.romaji(), lyric.kanji())

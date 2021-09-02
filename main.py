@@ -45,13 +45,16 @@ async def _Change_server_Count():
 		url="https://disbotlist.xyz/api/bots/stats"
 		headers={"ServerCount": str(len(bot.guilds)), "Authorization": os.environ['dbl']}
 		async with session.post(url, headers=headers) as response:
-			pass
+			print(f"Post server count! {len(bot.guilds)}")
 
 load_dotenv()
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_RETAIN"] = "True"
 
 _Database_backup.start()
+print(1)
 _Clear_history.start()
+print(2)
 _Change_server_Count.start()
+print(3)
 bot._run_(os.environ["GAM"])

@@ -14,6 +14,7 @@ class fun(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 	
+	
 	@commands.command('leave', description="Make me leave this guild :(")
 	@commands.has_permissions(kick_members=True)
 	async def _leave(self, ctx):
@@ -21,22 +22,200 @@ class fun(commands.Cog):
 		await ctx.guild.leave()
 
 	@commands.group(invoked_without_command=True)
-	@commands.cooldown(1, 3, commands.BucketType.user)
+	@commands.cooldown(1, 7, commands.BucketType.user)
 	async def anime(self, ctx):
 		pass
 	
 	@anime.command("lyric", description="Get info about anime lyric!")
-	@commands.cooldown(1, 3, commands.BucketType.user)
+	@commands.cooldown(1, 7, commands.BucketType.user)
 	async def _lyric(self, ctx, *,name):
-		await ctx.send("Soon....")
+		try:
+			msg=await ctx.send("Fetching Data...")
+			lyric = helper.lyric(name)
+
+			await msg.edit(content="Found it!")
+
+			msg=await ctx.send(embed=discord.Embed(
+				description="**Select The Language!**",
+				color=discord.Color.orange()
+			), components=[
+				ActionRow(
+					Button(
+						style=ButtonStyle.green,
+						label="English",
+						custom_id="english" 
+					),
+					Button(
+						style=ButtonStyle.green,
+						label="Kanji",
+						custom_id="kanji"
+						
+					),
+					Button(
+						style=ButtonStyle.green,
+						label="Romaji",
+						custom_id="romaji"
+					),
+					Button(
+						style=ButtonStyle.red,
+						label="Cancel",
+						custom_id="abort"
+					)
+				)
+			]
+		)
+
+		
+			on_click=msg.create_click_listener(timeout=120)
+			
+			@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
+			async def on_wrong_user(inter):
+				await inter.reply(
+					embed=discord.Embed(
+					description="You are not the member who use this command!",
+					color=discord.Color.red()
+				), 
+					ephemeral=True
+				)
+
+			@on_click.matching_id("english")
+			async def _English(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title="English Lyric",
+					url=lyric[0],
+					description=lyric[1],
+					color=discord.Color.orange()
+				),
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.green,
+								label="English",
+								custom_id="english",
+								disabled=True
+								
+							),
+							Button(
+								style=ButtonStyle.green,
+								label="Kanji",
+								custom_id="kanji"
+								
+							),
+							Button(
+								style=ButtonStyle.green,
+								label="Romaji",
+								custom_id="romaji"
+							),
+							Button(
+								style=ButtonStyle.red,
+								label="Cancel",
+								custom_id="abort"
+							)
+						)
+					]	
+				)
+
+			@on_click.matching_id("kanji")
+			async def _Kanji(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title="Kanji Lyric",
+					url=lyric[0],
+					description=lyric[2],
+					color=discord.Color.orange()
+				),
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.green,
+								label="English",
+								custom_id="english"
+							),
+							Button(
+								style=ButtonStyle.green,
+								label="Kanji",
+								custom_id="kanji",
+								disabled=True
+							),
+							Button(
+								style=ButtonStyle.green,
+								label="Romaji",
+								custom_id="romaji"
+							),
+							Button(
+								style=ButtonStyle.red,
+								label="Cancel",
+								custom_id="abort"
+							)
+						)
+					]	
+				)
+
+			@on_click.matching_id("romaji")
+			async def _Romaji(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title="Romaji Lyric",
+					url=lyric[0],
+					description=lyric[3],
+					color=discord.Color.orange()
+				),
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.green,
+								label="English",
+								custom_id="english"
+							),
+							Button(
+								style=ButtonStyle.green,
+								label="Kanji",
+								custom_id="kanji"
+							),
+							Button(
+								style=ButtonStyle.green,
+								label="Romaji",
+								custom_id="romaji",
+								disabled=True
+							),
+							Button(
+								style=ButtonStyle.red,
+								label="Cancel",
+								custom_id="abort"
+							)
+						)
+					]		
+				)
+
+			@on_click.timeout
+			async def _on_timeout():
+				await ctx.send("I have stop the command due to its long activity!")
+				await msg.delete()
+
+			@on_click.matching_id("abort")
+			async def _abort(inter):
+				await inter.message.delete()
+				on_click.kill()
+
+		except Exception as e:
+			raise e
 		
 	@anime.command("search", description="Get info about anime stats and much more!")
-	@commands.cooldown(1, 3, commands.BucketType.user)
+	@commands.cooldown(1, 7, commands.BucketType.user)
 	async def _search(self, ctx,  *,name):
 		try:
-			await ctx.send("Wait a sec :p")
+			msg=await ctx.send("Fetching Data...")
 			anime = helper.anime(name)
 
+			if anime[16] and not ctx.channel.is_nsfw():
+				await ctx.send("Looks like this anime is nsfw :/ make sure to use this command in nsfw channels!")
+				return
+
+			await msg.edit(content="Found it!")
 			msg=await ctx.send(embed=discord.Embed(
 				description="**Select A Category!**",
 				color=discord.Color.orange()
@@ -67,149 +246,173 @@ class fun(commands.Cog):
 				]	
 			)
 
-			while True:
-				inter=await ctx.wait_for_button_click(lambda inter: inter.author == ctx.author and inter.channel == ctx.channel)
-				id_=inter.clicked_button.custom_id
-				
-				if id_ == "info-button":
-					await msg.edit(embed=discord.Embed(
-						title=anime[0],
-						url=anime[1],
-						description=anime[2],
-						color=discord.Color.orange()
-					).set_thumbnail(
-						url=anime[3]
-					),
-						components=[
-							ActionRow(
-								Button(
-									style=ButtonStyle.grey,
-									label="Info",
-									emoji="\U00002753",
-									custom_id="info-button",
-									disabled=True
-									
-								),
-								Button(
-									style=ButtonStyle.grey,
-									label="Episodes",
-									emoji="\U0001f4fa",
-									custom_id="episodes-button"
-									
-								),
-								Button(
-									style=ButtonStyle.grey,
-									label="Miscellaneous ",
-									emoji="\U00002699",
-									custom_id="mis-button"
-								)
-							)
-						]	
-					)
+		
+			on_click=msg.create_click_listener(timeout=120)
+			
+			@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
+			async def on_wrong_user(inter):
+				await inter.reply(
+					embed=discord.Embed(
+					description="You are not the member who use this command!",
+					color=discord.Color.red()
+				), 
+					ephemeral=True
+				)
 
-				elif id_ == "episodes-button":
-					await msg.edit(embed=discord.Embed(
-						title=anime[0],
-						url=anime[1],
-						color=discord.Color.orange()
-					).set_thumbnail(
-						url=anime[3]
-					).add_field(
-						name="📺 Episodes",
-						value=anime[4]
-					).add_field(
-						name="🗃️ Genres",
-						value=',\n'.join(anime[10])
-					).add_field(
-						name="<a:typingstatus:873477367522263081> Status",
-						value=anime[12]
-					).add_field(
-						name="🌠 Teaser",
-						value=f"[Click Me!]({anime[6]})"
-					).add_field(
-						name="🎬 Opening",
-						value=anime[7]
-					).add_field(
-						name="🎬 Ending",
-						value=anime[8]
-					),
-						components=[
-							ActionRow(
-								Button(
-									style=ButtonStyle.grey,
-									label="Info",
-									emoji="\U00002753",
-									custom_id="info-button"
-								),
-								Button(
-									style=ButtonStyle.grey,
-									label="Episodes",
-									emoji="\U0001f4fa",
-									custom_id="episodes-button",
-									disabled=True
-									
-								),
-								Button(
-									style=ButtonStyle.grey,
-									label="Miscellaneous ",
-									emoji="\U00002699",
-									custom_id="mis-button"
-								)
+			@on_click.matching_id("info-button")
+			async def _Info(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title=anime[0],
+					url=anime[1],
+					description=anime[2],
+					color=discord.Color.orange()
+				).set_thumbnail(
+					url=anime[3]
+				),
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.grey,
+								label="Info",
+								emoji="\U00002753",
+								custom_id="info-button",
+								disabled=True
+								
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label="Episodes",
+								emoji="\U0001f4fa",
+								custom_id="episodes-button"
+								
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label="Miscellaneous ",
+								emoji="\U00002699",
+								custom_id="mis-button"
 							)
-						]	
-					)
-				elif id_ == "mis-button":
-					#15anime.producers
-					await msg.edit(embed=discord.Embed(
-						title=anime[0],
-						url=anime[1],
-						color=discord.Color.orange()
-					).set_thumbnail(
-						url=anime[3]
-					).add_field(
-						name="🏅 Ranked",
-						value=anime[9]
-					).add_field(
-						name="🏅 Rating",
-						value=anime[13]
-					).add_field(
-						name="⌛ Aired",
-						value=anime[5]
-					).add_field(
-						name="<:Offline:873411447303057489> Type",
-						value=anime[11]
-					).add_field(
-						name="🤩 Popularity",
-						value=anime[14]
-					).add_field(
-						name="🎥 Producers",
-						value=',\n'.join(anime[15]),
-					),
-						components=[
-							ActionRow(
-								Button(
-									style=ButtonStyle.grey,
-									label="Info",
-									emoji="\U00002753",
-									custom_id="info-button"
-								),
-								Button(
-									style=ButtonStyle.grey,
-									label="Episodes",
-									emoji="\U0001f4fa",
-									custom_id="episodes-button"
-								),
-								Button(
-									style=ButtonStyle.grey,
-									label="Miscellaneous ",
-									emoji="\U00002699",
-									custom_id="mis-button",
-									disabled=True
-								)
+						)
+					]	
+				)
+
+			@on_click.matching_id("episodes-button")
+			async def _episodes_Button(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title=anime[0],
+					url=anime[1],
+					color=discord.Color.orange()
+				).set_thumbnail(
+					url=anime[3]
+				).add_field(
+					name="📺 Episodes",
+					value=anime[4]
+				).add_field(
+					name="🗃️ Genres",
+					value=',\n'.join(anime[10])
+				).add_field(
+					name="<a:typingstatus:873477367522263081> Status",
+					value=anime[12]
+				).add_field(
+					name="🌠 Teaser",
+					value=f"[Click Me!]({anime[6]})"
+				).add_field(
+					name="🎬 Opening",
+					value=anime[7]
+				).add_field(
+					name="🎬 Ending",
+					value=anime[8]
+				),
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.grey,
+								label="Info",
+								emoji="\U00002753",
+								custom_id="info-button"
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label="Episodes",
+								emoji="\U0001f4fa",
+								custom_id="episodes-button",
+								disabled=True
+								
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label="Miscellaneous ",
+								emoji="\U00002699",
+								custom_id="mis-button"
 							)
-						]	
-					)
-		except:
-			await ctx.send("cant find that anime!")
+						)
+					]	
+				)
+			@on_click.matching_id("mis-button")
+			async def _mis_button(inter):
+				await inter.reply(
+					type=7,
+					embed=discord.Embed(
+					title=anime[0],
+					url=anime[1],
+					color=discord.Color.orange()
+				).set_thumbnail(
+					url=anime[3]
+				).add_field(
+					name="🏅 Ranked",
+					value=anime[9]
+				).add_field(
+					name="🏅 Rating",
+					value=anime[13]
+				).add_field(
+					name="⌛ Aired",
+					value=anime[5]
+				).add_field(
+					name="<:Offline:873411447303057489> Type",
+					value=anime[11]
+				).add_field(
+					name="🤩 Popularity",
+					value=anime[14]
+				).add_field(
+					name="🎥 Producers",
+					value=',\n'.join(anime[15]),
+				),
+					components=[
+						ActionRow(
+							Button(
+								style=ButtonStyle.grey,
+								label="Info",
+								emoji="\U00002753",
+								custom_id="info-button"
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label="Episodes",
+								emoji="\U0001f4fa",
+								custom_id="episodes-button"
+							),
+							Button(
+								style=ButtonStyle.grey,
+								label="Miscellaneous ",
+								emoji="\U00002699",
+								custom_id="mis-button",
+								disabled=True
+							)
+						)
+					]	
+				)
+
+			@on_click.timeout
+			async def _on_timeout():
+				for button in msg.components:
+					button.disabled = True
+
+		except Exception as e:
+			raise e
+
 def setup(bot):
 	bot.add_cog(fun(bot))

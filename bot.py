@@ -26,6 +26,9 @@ class Tango(commands.Bot):
 
 
 	async def on_message(self, msg):
+		if msg.author.bot:
+			return
+			
 		if msg.content == "<@!806725119917162527>":
 			await msg.reply(
 				embed=discord.Embed(
@@ -411,10 +414,9 @@ class HelpPage(commands.HelpCommand):
 #Context Menu Command
 
 slash=SlashClient(Tango())
-guild_ids=[858312394236624957, 843610787867525120]
 
 
-@slash.user_command(name="Show Your Profile!", guild_ids=guild_ids)
+@slash.user_command(name="Show Your Profile!")
 async def _profile(inter):
 	member=inter.author
 	data=await helper.find_in_channel(member.id)
@@ -429,6 +431,14 @@ async def _profile(inter):
 		)
 		return
 
+	if data[2] == 'no':
+		await inter.respond(
+			embed=discord.Embed(
+				description="Use `p!login` command to login to you your account!",
+				color=discord.Color.red()
+			)
+		)
+		return
 	
 	await inter.respond(
 			embed=discord.Embed(
@@ -480,7 +490,7 @@ async def _profile(inter):
 				)
 			)
 
-@slash.message_command(name="Show User Profile!", guild_ids=guild_ids)
+@slash.message_command(name="Show User Profile!")
 async def _Profile(inter):
 	member=inter.message.author
 	data=await helper.find_in_channel(member.id)
@@ -560,37 +570,14 @@ async def _Profile(inter):
 	description="Echo word that you specified",
     options=[
         Option("word", "Specify a word that will get send", Type.STRING, required=True)
-    ],
-	guild_ids=guild_ids
+    ]
 )
 async def echo(inter, *,word):
-	await inter.reply(word, allowed_mentions=discord.AllowedMentions(everyone=False, users=False, roles=False, replied_user=True))
+	await inter.reply(word)
 
 @slash.command(
-    name="help",
-	description="A short way to get access for help command",
-	guild_ids=guild_ids
+    name="support",
+	description="Get the link for support server"
 )
-async def help(inter):
-	cog_description={"Owner": "These commands can only use by one of the owner of the bot.", "Fun": "Commands that can be use by all members without any specific permissions or roles.", "Social": "Social is a group of commands that contain most of the commands that other can use!", "Jishaku": "Jishaku commands", "Information": "Commands that have all information that you need about Tango bot"}
-
-	categories=["Owner", "Fun", "Social", "Information"]
-		
-	emojis={"Owner": "👑", "Fun": "🤡", "Social": "🗨️", "Jishaku": "⚙️", "Information": "🛑"}
-
-	num_commands={"Owner": "4", "Fun": "2", "Social": "6", "Jishaku": "1", "Information": "2"}
-
-	em=discord.Embed(
-		title="HelpCommand",
-		description="Hello there, im Tango. A fun bot with a social media functions! Gain followers, million of views, and become the most followed channel! Post your meme and messages in community post! Post your video and get ton of review! All seen across multiple country!\n\n**Select A Category:**",
-		color=discord.Color.from_rgb(136, 223 ,251)
-	)
-	
-	for x in categories:
-		em.add_field(
-			name=f"{emojis[x]} {x} [{num_commands[x]}]",
-			value=cog_description[x],
-			inline=False
-		)
-
-	await inter.reply(embed=em)
+async def _Support(inter):
+	await inter.reply("Join my SupportServer to report error or hangout with the community!\ndiscord.gg/XHBhg6A4jJ")

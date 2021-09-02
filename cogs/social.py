@@ -3043,6 +3043,7 @@ class social(commands.Cog):
 				), components=[
 
 				])	
+				email='0'
 				try:
 					email=await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author and msg.channel == ctx.channel, timeout=120.0)
 				except asyncio.TimeoutError:
@@ -3146,7 +3147,7 @@ class social(commands.Cog):
 					on_click.kill()
 					return
 
-				pass_=data[4]
+				pass_=data[4] 
 				e=base64.b64decode(pass_).decode()
 				if e != password.content:
 					await ctx.author.send(embed=discord.Embed(

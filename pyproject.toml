@@ -16,7 +16,6 @@ animec = "^0.3.3"
 jishaku = "^2.2.0"
 validators = "^0.18.2"
 "dislash.py" = "^1.4.7"
-"disbotlist.py" = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 
