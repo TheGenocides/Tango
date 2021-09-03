@@ -4,15 +4,20 @@ import os
 import difflib
 import datetime
 import traceback
+import asyncio
+import aiohttp
 
 #======================
 
 from discord.ext import commands
+from discord.ext import tasks
 from dislash import SlashClient, Option, Type, InteractionClient
 
 class Tango(commands.Bot):
-	def __init__(self):#Bubble-gum blue, Sakura pink
+	def __init__(self):#Bubble-gum blue, Blossom pink
 		self.color=[0xAFEEEE, 0xFFB6C1]
+		self._Database_backup.start()
+		self._Clear_history.start()
 		super().__init__(
 			command_prefix=commands.when_mentioned_or("p!"),
 			help_command=HelpPage(),
@@ -24,6 +29,28 @@ class Tango(commands.Bot):
 			owner_ids=[685082846993317953, 687943803604303872, 806725119917162527]
 		)
 
+
+	@tasks.loop(seconds=600)
+	async def _Database_backup(self): 
+		os.system('git add db')
+		os.system(f"git commit -m 'Database Backup from _Database_backup'")
+		print("I have commited a git")
+		
+	@tasks.loop(seconds=1800)
+	async def _Clear_history(self): 
+		try:
+			await asyncio.sleep(10)
+			con=await helper.connect("db/info.db")
+			cur=await helper.cursor(con)
+		
+			await cur.execute("UPDATE info SET viewed = ?", ("[]",))
+			await con.commit()
+			await cur.close()
+			await con.close()
+			print("I have clear history of all users!")
+		except Exception as e:
+			raise e
+ 
 
 	async def on_message(self, msg):
 		if msg.author.bot:
@@ -122,6 +149,13 @@ class Tango(commands.Bot):
 		await db3.close()
 		await db4.close()
 		print("Im online :)")
+		async with aiohttp.ClientSession() as session:
+			url="https://disbotlist.xyz/api/bots/stats"
+			headers={"ServerCount": str(len(self.guilds)), "Authorization": os.environ['dbl']}
+			async with session.post(url, headers=headers) as response:
+
+				print(f"Post server count({len(self.guilds)})! Status: {response.status}")
+		
 		
 
 	async def on_command_error(self, ctx, error):
@@ -180,7 +214,7 @@ class Tango(commands.Bot):
 			possi=difflib.get_close_matches(ctx.invoked_with.lower(), ['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete']) 
 			em=discord.Embed(
 				title="Command Not Found",
-				description=f"No command called `{ctx.invoked_with}` did you mean `{', '.join(possi if possi else '.....')}`",
+				description=f"No command called `{ctx.invoked_with}` did you mean `{', '.join(possi) if possi else '.....'}`",
 				color=discord.Color.red()
 			).set_author(
 				name=ctx.author,

@@ -1,19 +1,36 @@
 import discord
-import asyncio
-import time
-import humanize
-import datetime
+import functools
 import helper
 
 from dislash import ActionRow, Button, ButtonStyle
 from discord.ext import commands
-
+from easy_pil import Editor, Canvas
 
 class fun(commands.Cog):
 	"""Fun Command for Tango bot"""
 	def __init__(self, bot):
 		self.bot = bot
 	
+	@commands.command("bar", description="Percentage the number given and turn it into bar similar to exp bar")
+	async def _bar(self, ctx, number):
+		try:
+			number=float(number) if not isinstance(number, int) else int(number)  
+		except Exception as e:
+			await ctx.send("Number must be a number not letters!")
+			raise e
+			return			
+
+		def make_card(self):  #40, 436
+			bg=Editor("assets/bg.png")    #650        #40
+			bg.rectangle((40, 550), width=1190, height=50, fill="white", radius=20)
+			bg.bar((40, 550), max_width=1190, height=50, percentage=(100/100)*number, fill="#5bfa9e", radius=20)
+			return bg.image_bytes
+		
+		raw=functools.partial(make_card, self)
+		card=await self.bot.loop.run_in_executor(None, raw)
+		await ctx.send(file=discord.File(fp=card, filename="card.png"))
+
+
 	
 	@commands.command('leave', description="Make me leave this guild :(")
 	@commands.has_permissions(kick_members=True)
@@ -31,8 +48,8 @@ class fun(commands.Cog):
 	async def _lyric(self, ctx, *,name):
 		try:
 			msg=await ctx.send("Fetching Data...")
-			lyric = helper.lyric(name)
-
+			lyric = functools.partial(helper.lyric, name)
+			lyric = await self.bot.loop.run_in_executor(None, lyric)
 			await msg.edit(content="Found it!")
 
 			msg=await ctx.send(embed=discord.Embed(
@@ -209,7 +226,8 @@ class fun(commands.Cog):
 	async def _search(self, ctx,  *,name):
 		try:
 			msg=await ctx.send("Fetching Data...")
-			anime = helper.anime(name)
+			anime = functools.partial(helper.anime, name)
+			anime = await self.bot.loop.run_in_executor(None, anime)
 
 			if anime[16] and not ctx.channel.is_nsfw():
 				await ctx.send("Looks like this anime is nsfw :/ make sure to use this command in nsfw channels!")

@@ -5008,12 +5008,8 @@ async def _reupload(self, ctx, video_ID):
 		await con.close()
 
 		await ctx.send(f"You reuploaded that video! Check it using `p!view {video_ID}`")
-
 	except Exception as e:
 		raise e 	
-		
-
-
 
 def setup(bot):
 	bot.add_cog(social(bot))

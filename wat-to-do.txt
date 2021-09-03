@@ -5,4 +5,4 @@ Y recent
 Y search
 
 Update 0.2.8
-1. Liked, Disliked, Following/Followers Commands! 
+1.  Following/Followers Commands! 
