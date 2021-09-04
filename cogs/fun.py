@@ -424,11 +424,6 @@ class fun(commands.Cog):
 					]	
 				)
 
-			@on_click.timeout
-			async def _on_timeout():
-				for button in msg.components:
-					button.disabled = True
-
 		except Exception as e:
 			raise e
 

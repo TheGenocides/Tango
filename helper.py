@@ -38,7 +38,7 @@ async def view(id):
 	await cur.execute("SELECT * FROM video WHERE ID = ?", (id,))
 	data=await cur.fetchall()
 
-	full_data=[(x[3], x[1], x[2], x[4], x[5], x[6], x[7], x[8], x[0], x[10], x[11], x[12], x[14]) for x in data]
+	full_data=[(x[3], x[1], x[2], x[4], x[5], x[6], x[7], x[8], x[0], x[10], x[11], x[12], x[14], x[15]) for x in data]
 	await cur.close()
 	await con.close()
 	return full_data
@@ -50,7 +50,7 @@ async def find_videos(condition):
 	await cur.execute("SELECT * FROM video WHERE deleted = ?", ("n",))
 	data=await cur.fetchall()
 	alt_condition=condition[0] + condition[1] + condition[2]
-	full_data=[(x[3], x[1], x[2], x[4], x[5], x[6], x[7], x[8], x[0], x[10], x[11], x[12], x[14]) for x in data if condition in x[1] or condition in x[1].split(" ") or condition.lower() in x[1] or condition.lower() in x[1].split(" ") or condition.upper() in x[1] or condition.upper() in x[1].split(" ") or condition in x[1].lower() or condition.lower() in x[1].lower() or alt_condition in x[1] or alt_condition.lower() in x[1] or alt_condition in x[1].lower() or alt_condition.lower() in  x[1].lower() or alt_condition in x[1][:3]]
+	full_data=[(x[3], x[1], x[2], x[4], x[5], x[6], x[7], x[8], x[0], x[10], x[11], x[12], x[14], x[15]) for x in data if condition in x[1] or condition in x[1].split(" ") or condition.lower() in x[1] or condition.lower() in x[1].split(" ") or condition.upper() in x[1] or condition.upper() in x[1].split(" ") or condition in x[1].lower() or condition.lower() in x[1].lower() or alt_condition in x[1] or alt_condition.lower() in x[1] or alt_condition in x[1].lower() or alt_condition.lower() in  x[1].lower() or alt_condition in x[1][:3]]
 	await cur.close()
 	await con.close()
 	return full_data
@@ -122,7 +122,6 @@ async def comments(bot, commenter_id: int, video_id: int, content: str):
 		await cur.execute("UPDATE video SET comments = comments + 1 WHERE ID = ?", (video_id,))
 		
 		await con.commit()
-
 		await cur.close()
 		await con.close()
 
@@ -139,6 +138,10 @@ async def is_nsfw(ID):
 	return True if nsfw == 'y' else False 
 
  
+async def get_channel_name(id):
+	data=await find_in_channel(id)
+	return data[1]
+
 def anime(name):
 	anime = animec.Anime(name)
 	data=(anime.name, anime.url, anime.description, anime.poster, anime.episodes, anime.aired, anime.teaser, random.choice(anime.opening_themes), random.choice(anime.ending_themes), anime.ranked, anime.genres, anime.type, anime.status, anime.rating, anime.popularity, anime.producers, anime.is_nsfw())

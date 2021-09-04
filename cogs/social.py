@@ -1461,7 +1461,7 @@ class social(commands.Cog):
 								label=data[i][4],
 								emoji="<:likes:875659362343993404>",
 								custom_id="like-button",
-								disabled=True if str(ctx.author.id) in data[i][6] else False
+								disabled=True if str(ctx.author.id) in data[i][6] else False 
 							),
 							Button(
 								style=ButtonStyle.red,
@@ -1477,6 +1477,15 @@ class social(commands.Cog):
 								custom_id="time-button",
 								disabled=True
 							)
+						),
+						ActionRow(
+							Button(
+								style=ButtonStyle.green,
+								label=data[i][13],
+								emoji="\U0001f5e8",
+								custom_id="comment-button",
+								disabled=True
+							)	
 						)
 					]
 				)
@@ -1486,11 +1495,14 @@ class social(commands.Cog):
 				await con.commit()
 				await con2.commit()
 			
-		
+			 
 			try:
 				while True:
 					try:
-						inter = await ctx.wait_for_button_click(lambda inter: inter.message.id == msg.id or inter.message.id == file.id and inter.channel == ctx.channel, timeout=100)
+						print(1)
+						inter = await ctx.wait_for_button_click(lambda inter: inter.message == msg or inter.message == file and inter.channel == ctx.channel, timeout=100)
+						print(inter)
+						print(inter.clicked_button.custom_id)
 						if inter.author != ctx.author:
 							await inter.reply(embed=discord.Embed(
 								description="You are not the member who use this command!",
@@ -1511,9 +1523,9 @@ class social(commands.Cog):
 							color=discord.Color.red()
 						))
 						return
-
+		 
 				button_id = inter.clicked_button.custom_id
-				
+				 
 				if button_id == "subs-button":
 					info_con=await helper.connect('db/info.db')
 					info_cur=await helper.cursor(info_con)
@@ -1573,6 +1585,22 @@ class social(commands.Cog):
 									emoji="<:dislikes:875659362264309821>",
 									custom_id="dislike-button",
 									disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][7]) else False
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=date_time,
+									emoji="\U0000231b",
+									custom_id="time-button",
+									disabled=True
+								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][13],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
 								)
 							)
 						]
@@ -1684,6 +1712,22 @@ class social(commands.Cog):
 									emoji="<:dislikes:875659362264309821>",
 									custom_id="dislike-button",
 									disabled=False
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=date_time,
+									emoji="\U0000231b",
+									custom_id="time-button",
+									disabled=True
+								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][13],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
 								)
 							)
 						]
@@ -1779,6 +1823,22 @@ class social(commands.Cog):
 									emoji="<:dislikes:875659362264309821>",
 									custom_id="dislike-button",
 									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=date_time,
+									emoji="\U0000231b",
+									custom_id="time-button",
+									disabled=True
+								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][13],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
 								)
 							)
 						]
@@ -1788,6 +1848,8 @@ class social(commands.Cog):
 					await cur2.close()
 					await con.close()
 					await con2.close()
+		
+					
 
 			except Exception as e:
 				raise e
@@ -1935,6 +1997,15 @@ class social(commands.Cog):
 										custom_id="time-button",
 										disabled=True
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -2082,6 +2153,15 @@ class social(commands.Cog):
 										custom_id="dislike-button",
 										disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][7]) else False
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -2174,6 +2254,15 @@ class social(commands.Cog):
 										custom_id="dislike-button",
 										disabled=False
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -2267,6 +2356,15 @@ class social(commands.Cog):
 										custom_id="dislike-button",
 										disabled=True
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -2394,6 +2492,15 @@ class social(commands.Cog):
 									custom_id="time-button",
 									disabled=True
 								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][13],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
+								)	
 							)
 						]
 					)
@@ -2485,6 +2592,15 @@ class social(commands.Cog):
 										custom_id="dislike-button",
 										disabled=True if str(ctx.author.id) in ast.literal_eval(data[i][7]) else False
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -2593,6 +2709,15 @@ class social(commands.Cog):
 										custom_id="dislike-button",
 										disabled=False
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -2686,6 +2811,15 @@ class social(commands.Cog):
 										custom_id="dislike-button",
 										disabled=True
 									)
+								),
+								ActionRow(
+									Button(
+										style=ButtonStyle.green,
+										label=data[i][13],
+										emoji="\U0001f5e8",
+										custom_id="comment-button",
+										disabled=True
+									)	
 								)
 							]
 						)
@@ -3537,15 +3671,7 @@ class social(commands.Cog):
 
 			await helper.comments(self.bot, ctx.author.id, video_id, msg)
 			await ctx.send("Posted your comment!")
-			
-			con=await helper.connect("db/video.db")
-			cur=await helper.cursor(con)
-			await cur.execute("UPDATE video SET comments = comments + 1 WHERE ID = ?", (video_id,))
 
-			await con.commit()
-			await cur.close()
-			await con.close()
-		
 		else:
 			
 			con=await helper.connect("db/comment.db")
@@ -3590,18 +3716,18 @@ class social(commands.Cog):
 			if comments > 1:
 				while True:
 					commenter=await helper.find_in_channel(data[page][0])
-					user=await self.bot.fetch_user(data[page][0])
+					user=await helper.find_in_channel(data[page][0])
 					if loop == True:
 						em=discord.Embed(
 							title=f"Comments on '{video[0][1]}'",
-							description=f"**[<t:{data[page][3]}:R> {user.name}]:** {data[page][1]}\n",
+							description=f"**[<t:{data[page][3]}:R> {user[1]}]:** {data[page][1]}\n",
 							color=self.embed_color,
 							timestamp=tz
 						).set_footer(
 							text=f"Comments {page + 1}/{comments} | Comment ID: {data[page][2]} | Video ID: {video_id}",
 							icon_url=commenter[3]
 						).set_author(
-							name=f"Commented by @{user.name}",
+							name=f"Commented by @{user[1]}",
 							icon_url=commenter[3]
 						)
 
@@ -3617,6 +3743,7 @@ class social(commands.Cog):
 									),
 									Button(
 										style=ButtonStyle.red,
+										label="Cancel",
 										emoji="<:tick_no:874284510575996968>",
 										custom_id="delete-button"
 									)
@@ -3635,14 +3762,14 @@ class social(commands.Cog):
 					else:
 						em=discord.Embed(
 							title=f"Comments on '{video[0][1]}'",
-							description=f"**[<t:{data[page][3]}:R> {user.name}]:** {data[page][1]}\n",
+							description=f"**[<t:{data[page][3]}:R> {user[1]}]:** {data[page][1]}\n",
 							color=self.embed_color,
 							timestamp=tz
 						).set_footer(
 							text=f"Comments {page + 1}/{comments} | Comment ID: {data[page][2]} | Video ID: {video_id}",
 							icon_url=commenter[3]
 						).set_author(
-							name=f"Commented by @{user.name}",
+							name=f"Commented by @{user[1]}",
 							icon_url=commenter[3]
 						)
 						
@@ -3659,6 +3786,7 @@ class social(commands.Cog):
 									),
 									Button(
 										style=ButtonStyle.red,
+										label="Cancel",
 										emoji="<:tick_no:874284510575996968>",
 										custom_id="delete-button"
 									)
@@ -3738,14 +3866,14 @@ class social(commands.Cog):
 				user=await self.bot.fetch_user(data[page][0])
 				em=discord.Embed(
 					title=f"Comments on '{video[0][1]}'",
-					description=f"**[<t:{data[page][3]}:R> {user.name}]:** {data[page][1]}\n",
+					description=f"**[<t:{data[page][3]}:R> {commenter[1]}]:** {data[page][1]}\n",
 					color=self.embed_color,
 					timestamp=tz
 				).set_footer(
 					text=f"Comments {page + 1}/{comments} | Comment ID: {data[page][2]} | Video ID: {video_id}",
 					icon_url=commenter[3]
 				).set_author(
-					name=f"Commented by @{user.name}",
+					name=f"Commented by @{commenter[1]}",
 					icon_url=commenter[3]
 				)
 
@@ -4351,6 +4479,15 @@ class social(commands.Cog):
 									custom_id="time-button",
 									disabled=True
 								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][15],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
+								)	
 							)
 						]
 					)
@@ -4502,6 +4639,15 @@ class social(commands.Cog):
 									custom_id="time-button",
 									disabled=True
 								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][15],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
+								)	
 							)
 						]
 					)
@@ -4603,6 +4749,15 @@ class social(commands.Cog):
 									custom_id="time-button",
 									disabled=True
 								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][15],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
+								)	
 							)
 						]
 					)
@@ -4703,6 +4858,15 @@ class social(commands.Cog):
 									custom_id="time-button",
 									disabled=True
 								)
+							),
+							ActionRow(
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][15],
+									emoji="\U0001f5e8",
+									custom_id="comment-button",
+									disabled=True
+								)	
 							)
 						]
 					)
@@ -4849,6 +5013,15 @@ class social(commands.Cog):
 							custom_id="time-button",
 							disabled=True
 						)
+					),
+					ActionRow(
+						Button(
+							style=ButtonStyle.green,
+							label=data[i][15],
+							emoji="\U0001f5e8",
+							custom_id="comment-button",
+							disabled=True
+						)	
 					)
 				]
 			)
@@ -4946,70 +5119,212 @@ class social(commands.Cog):
 
 				except Exception as e:
 					raise e
-		
-		
-
 	
-@commands.command("reupload")
-async def _reupload(self, ctx, video_ID):
-	con=await helper.connect("db/video.db")
-	cur=await helper.cursor(con)
+	@commands.command("reupload")
+	async def _reupload(self, ctx, video_ID):
+		con=await helper.connect("db/video.db")
+		cur=await helper.cursor(con)
 
-	data_channel=await helper.find_in_channel(ctx.author.id)
-	data_info=await helper.find_in_info(ctx.author.id)
+		data_channel=await helper.find_in_channel(ctx.author.id)
+		data_info=await helper.find_in_info(ctx.author.id)
 
-	if not data_channel or not data_info:
-		await ctx.send(embed=self.channel_error)
-		return
+		if not data_channel or not data_info:
+			await ctx.send(embed=self.channel_error)
+			return
 
-	if data_info[2] == 'no':
-		await ctx.send(embed=self.login_error)
-		return
+		if data_info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
 
-	channel=await helper.find_in_channel(ctx.author.id)
-	info=await helper.find_in_info(ctx.author.id)
-	
-	await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,))
-	data=await cur.fetchone()
+		channel=await helper.find_in_channel(ctx.author.id)
+		info=await helper.find_in_info(ctx.author.id)
+		
+		await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,))
+		data=await cur.fetchone()
 
-	if not channel:
-		await ctx.send(embed=self.channel_error)
-		return
+		if not channel:
+			await ctx.send(embed=self.channel_error)
+			return
 
-	if info[2] == 'no':
-		await ctx.send(embed=self.login_error)
-		return
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
 
-	if not data:
-		await ctx.send(embed=discord.Embed(
-			description="You put a wrong ID!",
-			color=discord.Color.red()
-		))
-		return
+		if not data:
+			await ctx.send(embed=discord.Embed(
+				description="You put a wrong ID!",
+				color=discord.Color.red()
+			))
+			return
 
-	if data[13] == 'n':
-		await ctx.send(embed=discord.Embed(
-			description="That video is already available!",
-			color=discord.Color.red()
-		))
-		return
+		if data[13] == 'n':
+			await ctx.send(embed=discord.Embed(
+				description="That video is already available!",
+				color=discord.Color.red()
+			))
+			return
 
-	if data[0] != ctx.author.id:
-		await ctx.send(embed=discord.Embed(
-			description="Your not the owner who deleted this video!",
-			color=discord.Color.red()
-		))
-		return
+		if data[0] != ctx.author.id:
+			await ctx.send(embed=discord.Embed(
+				description="Your not the owner who deleted this video!",
+				color=discord.Color.red()
+			))
+			return
 
-	try:
-		await cur.execute("UPDATE video SET deleted = ? WHERE ID = ?", ('n', video_ID))
-		await con.commit()
+		try:
+			await cur.execute("UPDATE video SET deleted = ? WHERE ID = ?", ('n', video_ID))
+			await con.commit()
+			await cur.close()
+			await con.close()
+
+			await ctx.send(f"You reuploaded that video! Check it using `p!view {video_ID}`")
+		except Exception as e:
+			raise e 	
+
+	@commands.command("subscribed", description="Display channels that you subscribed", aliases=["subscribe", "following"])
+	@commands.cooldown(1, 10, commands.BucketType.user)
+	async def _subscribed(self, ctx):
+		channel_data=await helper.find_in_channel(ctx.author.id)
+		info=await helper.find_in_info(ctx.author.id)
+		con=await helper.connect("db/info.db")
+		cur=await helper.cursor(con)
+
+		await cur.execute("SELECT subscribed FROM info WHERE member_id = ?", (ctx.author.id,))
+		e=await cur.fetchone()
+		data=ast.literal_eval(e[0])
+	 
+		if not channel_data:
+			await ctx.send(embed=self.channel_error)
+			return
+
+		if info[2] == 'no':
+			await ctx.send(embed=self.login_error)
+			return
+
+		if not data:
+			await ctx.send(
+				embed=discord.Embed(
+					description="You havent subscribed anyone yet! subscribed them by clicking the subscribed button in search or view commands!",
+					color=discord.Color.red()				
+				)
+			)
+
+		
 		await cur.close()
 		await con.close()
 
-		await ctx.send(f"You reuploaded that video! Check it using `p!view {video_ID}`")
-	except Exception as e:
-		raise e 	
+		con=await helper.connect('db/video.db')
+		cur=await helper.cursor(con)
+		sets=set()
+
+		for id in data:
+			await cur.execute("SELECT member_id FROM video WHERE ID = ?", (id,))
+			e=await cur.fetchone()
+			sets.add(e[0])
+
+		await cur.close()
+		await con.close()
+
+		embeds=[]
+		txt=''
+		counter = 0
+		for id in sets:
+			channel=await helper.get_channel_name(id)
+			user=await self.bot.fetch_user(id)
+			txt += f"**{channel}**: {user.mention}\n"
+			counter += 1
+			if counter == 5:
+				em=discord.Embed(
+					title=f"Following {len(sets)} channels!",
+					description=txt,
+					color=self.embed_color
+				)
+				counter = 0
+				txt = ""
+				embeds.append(em)
+
+			elif counter < 5 and counter == len(sets):
+				em=discord.Embed(
+					title=f"Following {len(sets)} channels!",
+					description=txt,
+					color=self.embed_color
+				)
+				counter = 0
+				txt = ""
+				embeds.append(em)
+
+
+		page = 0
+		msg=await ctx.send(
+			embed=embeds[page],
+			components=[
+				ActionRow(
+					Button(
+						style=ButtonStyle.blurple,
+						label="",
+						emoji="\U00002b05",
+						custom_id="left-button",
+						disabled=True
+					),
+					Button(
+						style=ButtonStyle.red,
+						label="",
+						emoji="<:tick_no:874284510575996968>",
+						custom_id="delete-button",
+						disabled=False
+					),
+					Button(
+						style=ButtonStyle.blurple,
+						label="",
+						emoji="\U000027a1",
+						custom_id="right-button",
+						disabled=True
+					)
+				)
+			]
+		)
+		on_click=msg.create_click_listener(timeout=30)
+
+		@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
+		async def _not_from_author(inter):
+			await inter.reply(
+				embed=discord.Embed(
+					description="You are not the member who use this command!",
+					color=discord.Color.red()
+				), 
+					ephemeral=True
+				)
+		@on_click.matching_id("left-button")
+		async def _previous_page(inter):
+			nonlocal page
+			if page == 0:
+				page = (len(embeds) - 1)
+			
+			else:
+				page -= 1
+
+		@on_click.matching_id("right-button")
+		async def _Next_page(inter):
+			nonlocal page
+			if page == (len(embeds) - 1):
+				page = 0
+			
+			else:
+				page += 1
+
+		@on_click.matching_id("delete-button")
+		async def _Abort_page(inter):
+			await msg.delete()
+
+		@on_click.no_checks()
+		async def _No_check(inter):
+			if not inter.clicked_button.id == "delete-button":
+				await msg.edit(embed=embeds[page])
+			else:
+				pass
+
+
+
 
 def setup(bot):
 	bot.add_cog(social(bot))
