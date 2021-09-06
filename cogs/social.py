@@ -5135,20 +5135,9 @@ class social(commands.Cog):
 		if data_info[2] == 'no':
 			await ctx.send(embed=self.login_error)
 			return
-
-		channel=await helper.find_in_channel(ctx.author.id)
-		info=await helper.find_in_info(ctx.author.id)
 		
 		await cur.execute("SELECT * FROM video WHERE ID = ?", (video_ID,))
 		data=await cur.fetchone()
-
-		if not channel:
-			await ctx.send(embed=self.channel_error)
-			return
-
-		if info[2] == 'no':
-			await ctx.send(embed=self.login_error)
-			return
 
 		if not data:
 			await ctx.send(embed=discord.Embed(
@@ -5256,7 +5245,9 @@ class social(commands.Cog):
 
 		page = 0
 		msg=await ctx.send(
-			embed=embeds[page],
+			embed=embeds[page].set_footer(
+				text=f"Page {page + 1}/{len(embeds)} | {len(sets)} Following!"
+			),
 			components=[
 				ActionRow(
 					Button(
@@ -5319,10 +5310,30 @@ class social(commands.Cog):
 		@on_click.no_checks()
 		async def _No_check(inter):
 			if not inter.clicked_button.id == "delete-button":
-				await msg.edit(embed=embeds[page])
+				await msg.edit(
+					embed=embeds[page].set_footer(
+						text=f"Page {page + 1}/{len(embeds)} | {len(sets)} Following!"
+				))
 			else:
 				pass
 
+
+	# @commands.command("liked")
+	# async def _liked(self, ctx):
+	# 	channel=await helper.find_in_channel(ctx.author.id)
+	# 	info=await helper.find_in_info(ctx.author.id)
+	# 	sets=set()
+	# 	con=await helper.connect('db/video.db')
+	# 	cur=await helper.cursor(con)
+
+	# 	data=ast.literal_eval(info[8])
+	# 	print(data)
+
+	# 	for id in data:
+	# 		await cur.execute("SELECT member_id FROM video WHERE ID = ?", (id,))
+	# 		e=await cur.fetchone()
+	# 		sets.add(e[0])
+	# 	print(sets)
 
 
 
