@@ -123,7 +123,8 @@ class Tango(commands.Bot):
 					old_views text,
 					deleted text,
 					nsfw text,
-					comments integer
+					comments integer,
+					verified text
 		)""")
 
 		db4=await helper.connect('db/comment.db')
@@ -211,7 +212,7 @@ class Tango(commands.Bot):
 				raise error
 
 		elif isinstance(error, commands.CommandNotFound):
-			possi=difflib.get_close_matches(ctx.invoked_with.lower(), ['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete']) 
+			possi=difflib.get_close_matches(ctx.invoked_with.lower(), ['uptime', 'ping', 'news', 'info', "start", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete', 'liked']) 
 			em=discord.Embed(
 				title="Command Not Found",
 				description=f"No command called `{ctx.invoked_with}` did you mean `{', '.join(possi) if possi else '.....'}`",

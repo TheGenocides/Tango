@@ -13,35 +13,97 @@ class owner(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	@commands.command("channel_data", description="Get someone videos data!")
+	@commands.command("verify_all")
 	@commands.is_owner()
-	async def _channel_data(self, ctx):
-		con=await helper.connect("db/channel.db")
+	async def _verify_all(self, ctx):
+		con=await helper.connect("db/video.db")
 		cur=await helper.cursor(con)
-		await cur.execute("SELECT * FROM channel")
-		print(await cur.fetchall())
+		await cur.execute("UPDATE video SET verified = ?", ("y",))
+	
+	@commands.command("verify")
+	@commands.is_owner()
+	async def _verify(self, ctx, ID):
+		verified=self.bot.get_channel(884303044534206485)
+		log=self.bot.get_channel(873919769122865162)
+		data=await helper.find_in_video_by_id(ID, False)
+		user=self.bot.get_user(int(data[0]))
+		if not data:
+			await ctx.send("wrong id :/")
+			return
+
+		if data[16] == "y":
+			await ctx.send("already verified!")
+			return
+
+		if not user:
+			await ctx.send("Oh no cant find the user idk why. ask my dev to fix this error!")
+			return
+
+		if data[13] == "y":
+			await ctx.send("Deleted video cant get verified!")
+			return
+
+		con=await helper.connect("db/video.db")
+		cur=await helper.cursor(con)
+		await cur.execute("UPDATE video SET verified = ? WHERE ID = ?", ('y', str(ID)))
+		await con.commit()
+		await cur.close()
+		await con.close()
+		await ctx.send(f"verified video with `{ID}` as its ID. I will dm the user to announce the news!")
+		await user.send(f"We have verified your video! with `{ID}` has its ID! Thanks for using TangoBot!")
+		await log.send(
+			user.mention,
+			embed=discord.Embed(
+				title="Verified Video!",
+				description=f"{user.mention} We have verified your video with `{ID}` as its ID!",
+				color=self.bot.color[0]
+			)
+		)
+		await verified.send(
+			"verified :thumpsup:"
+		)
 		
-	@commands.command("info_data", description="Get someone videos data!")
-	@commands.is_owner()
-	async def _info_data(self, ctx, ID):
-		con=await helper.connect("db/info.db")
-		cur=await helper.cursor(con)
-		await cur.execute("SELECT * FROM info WHERE member_id = ?", (ID,))
-		await ctx.author.send(await cur.fetchone())
 
-	@commands.command("video_data", description="Get someone videos data!")
+	@commands.command("decline")
 	@commands.is_owner()
-	async def _video_data(self, ctx, ID):
-		con=await helper.connect('db/video.db')
-		cur=await helper.cursor(con)
-		await cur.execute("SELECT * FROM video WHERE member_id = ?", (ID,))
-		await ctx.send(f".{await cur.fetchall()}")
+	async def _decline(self, ctx, ID, *,reason):
+		verified=self.bot.get_channel(884303044534206485)
+		log=self.bot.get_channel(873919769122865162)
+		data=await helper.find_in_video_by_id(ID, False)
+		
+		if not data:
+			await ctx.send("wrong id or the video already got decline/delete permanently! :/")
+			return
 
-	@commands.command("data", description="Get someone channel data!")
-	@commands.is_owner()
-	async def _data(self, ctx, ID):
-		data=await helper.find_in_channel(ID)
-		await ctx.send(f".{data}")
+		user=self.bot.get_user(int(data[0]))
+		if not user:
+			await ctx.send("Oh no cant find the user idk why. ask my dev to fix this error!")
+			return
+
+		con=await helper.connect("db/video.db")
+		cur=await helper.cursor(con)
+		await cur.execute("DELETE FROM video WHERE ID = ?", (ID,))
+		await con.commit()
+		await cur.close()
+		await con.close()
+		await ctx.send(f"Declined video with `{ID}` as its ID. I will dm the user to announce the news")
+		await user.send(f"We have Declined your video because {reason}! With {ID} as its id.")
+		await log.send(
+			user.mention,
+			embed=discord.Embed(
+				title="Declined Video!",
+				description=f"{user.mention} We have Declined your video because `{reason}`. With `{ID}` as its ID!",
+				color=self.bot.color[1]
+			).set_footer(
+				text=f"Requested by {ctx.author}",
+				icon_url=ctx.author.avatar_url
+			).set_author(
+				name=ctx.author.name,
+				icon_url=ctx.author.avatar_url
+			)
+		)
+		
+		
 
 	@commands.command("delete_account")
 	@commands.is_owner()
@@ -67,31 +129,16 @@ class owner(commands.Cog):
 		await con.close()
 		await con2.close()
 		await con3.close()
-	
- 
-	@commands.command()
-	@commands.is_owner()
-	async def set_video(self, ctx):
-		con=await helper.connect("db/info.db")
-		cur=await helper.cursor(con)
 
-
-		await cur.execute("UPDATE info SET liked = ? WHERE member_id = ?", ("['1335245607', '1943349997']", ctx.author.id))
-
-		await con.commit()
-		await cur.close()
-		await con.close()
-
-
-	@commands.command("ss", hidden=True)
-	@commands.is_owner()
-	@commands.is_nsfw()
-	async def _screenshot(self, ctx, *,name: str):
-		await ctx.send(embed=discord.Embed(
-			color=discord.Color.from_rgb(136, 223 ,251)
-		).set_image(
-			url=f"https://image.thum.io/get/width/3000/height/3000/http://www.{name}.com/"
-		))
+	# @commands.command("ss", hidden=True)
+	# @commands.is_owner()
+	# @commands.is_nsfw()
+	# async def _screenshot(self, ctx, *,name: str):
+	# 	await ctx.send(embed=discord.Embed(
+	# 		color=discord.Color.from_rgb(136, 223 ,251)
+	# 	).set_image(
+	# 		url=f"https://image.thum.io/get/width/3000/height/3000/http://www.{name}.com/"
+	# 	))
 
 
 	@commands.command("reboot", description= "Restart the entire bot", aliases = ["restart"])
