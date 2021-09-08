@@ -105,7 +105,7 @@ See you next time!""",
 	@commands.command("invite", description="Get a link for inviting TangoBot!")
 	@commands.cooldown(1, 3, commands.BucketType.user)
 	async def _invite(self, ctx):
-		await ctx.send("You can invite me by clicking this link!\nhttps://bit.ly/3BbyPIE")
+		await ctx.send("You can invite me by clicking this link!\nhttps://discord.com/api/oauth2/authorize?client_id=806725119917162527&permissions=242933428048&scope=applications.commands%20bot")
 
 	
 

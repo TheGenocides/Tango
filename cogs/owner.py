@@ -19,6 +19,7 @@ class owner(commands.Cog):
 		con=await helper.connect("db/video.db")
 		cur=await helper.cursor(con)
 		await cur.execute("UPDATE video SET verified = ?", ("y",))
+		await ctx.send("Verify all video!")
 	
 	@commands.command("verify")
 	@commands.is_owner()
@@ -59,10 +60,7 @@ class owner(commands.Cog):
 				color=self.bot.color[0]
 			)
 		)
-		await verified.send(
-			"verified :thumpsup:"
-		)
-		
+		 
 
 	@commands.command("decline")
 	@commands.is_owner()
@@ -95,10 +93,10 @@ class owner(commands.Cog):
 				description=f"{user.mention} We have Declined your video because `{reason}`. With `{ID}` as its ID!",
 				color=self.bot.color[1]
 			).set_footer(
-				text=f"Requested by {ctx.author}",
+				text=f"If you want to appeal the problem you can DM {ctx.author}",
 				icon_url=ctx.author.avatar_url
 			).set_author(
-				name=ctx.author.name,
+				name=f"Declined By {ctx.author}",
 				icon_url=ctx.author.avatar_url
 			)
 		)
@@ -176,7 +174,7 @@ class owner(commands.Cog):
 				
 				self.bot.reload_extension("jishaku")
 				await ctx.send(embed=discord.Embed(
-					title="Succesful",
+					title="Successful",
 					description=f"Succesfuly reloaded **All** cogs\nTook me `{datetime.datetime.utcnow() - time_}` to reloaded **ALL** cogs!",
 					color=discord.Color.blurple()
 				))

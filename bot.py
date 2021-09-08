@@ -30,7 +30,7 @@ class Tango(commands.Bot):
 		)
 
 
-	@tasks.loop(seconds=600)
+	@tasks.loop(seconds=1000)
 	async def _Database_backup(self): 
 		os.system('git add db')
 		os.system(f"git commit -m 'Database Backup from _Database_backup'")

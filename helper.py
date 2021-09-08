@@ -70,23 +70,41 @@ async def find_in_channel(condition,  *,mode="one"):
 	elif mode.lower() == 'all':
 		return all_
 
-async def find_in_video(condition,  deleted:bool, *,mode="one"):
+async def find_in_video(condition,  deleted:bool, *,mode="one", verified=None):
 	deleted='y' if deleted else 'n'
-	con=await connect('db/video.db')
-	cur=await cursor(con)
-	await cur.execute("SELECT * FROM video WHERE member_id = ? AND deleted = ?", (condition, deleted))
-	
-	if mode.lower() == "one":
-		data=await cur.fetchone()
-		await cur.close()
-		await con.close()
-		return data
+	if verified is None:
+		con=await connect('db/video.db')
+		cur=await cursor(con)
+		await cur.execute("SELECT * FROM video WHERE member_id = ? AND deleted = ?", (condition, deleted))
+		
+		if mode.lower() == "one":
+			data=await cur.fetchone()
+			await cur.close()
+			await con.close()
+			return data
 
-	elif mode.lower() == 'all':
-		data=await cur.fetchall()
-		await cur.close()
-		await con.close()
-		return data
+		elif mode.lower() == 'all':
+			data=await cur.fetchall()
+			await cur.close()
+			await con.close()
+			return data
+
+	else:
+		con=await connect('db/video.db')
+		cur=await cursor(con)
+		await cur.execute("SELECT * FROM video WHERE member_id = ? AND deleted = ? AND verified = ?", (condition, deleted, verified))
+		
+		if mode.lower() == "one":
+			data=await cur.fetchone()
+			await cur.close()
+			await con.close()
+			return data
+
+		elif mode.lower() == 'all':
+			data=await cur.fetchall()
+			await cur.close()
+			await con.close()
+			return data
 
 async def find_in_info(condition,  *,mode="one"):
 	con=await connect('db/info.db')
