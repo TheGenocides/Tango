@@ -18,6 +18,7 @@ validators = "^0.18.2"
 "dislash.py" = "^1.4.7"
 a = "^1.0"
 easy-pil = "^0.0.9"
+discord-together = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 

@@ -4313,9 +4313,9 @@ class social(commands.Cog):
 		info_data=await helper.find_in_info(ctx.author.id)		
 		channel_data=await helper.find_in_channel(ctx.author.id)
 		
-		if not ctx.author.id in self.bot.owner_ids:
-			await ctx.send("This command is under renovation. Comeback after 30 mins!")
-			return
+		# if not ctx.author.id in self.bot.owner_ids:
+		# 	await ctx.send("This command is under renovation. Comeback after 30 mins!")
+		# 	return
 		
 		if not channel_data:
 			await ctx.send(embed=self.channel_error)
@@ -5307,7 +5307,7 @@ class social(commands.Cog):
 		con=await helper.connect('db/video.db')
 		cur=await helper.cursor(con)
         
-		data=ast.literal_eval(info[7])
+		data=ast.literal_eval(info[8])
 		if len(data) == 0:
 			await ctx.send(embed=discord.Embed(
 				description="Looks like you never liked a video before!",
@@ -5548,7 +5548,7 @@ class social(commands.Cog):
 		con=await helper.connect('db/video.db')
 		cur=await helper.cursor(con)
         
-		data=ast.literal_eval(info[8])
+		data=ast.literal_eval(info[9])
 		if len(data) == 0:
 			await ctx.send(embed=discord.Embed(
 				description="Looks like you never disliked a video before!",

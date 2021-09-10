@@ -1,15 +1,17 @@
 import discord
 import functools
 import helper
+from discordTogether import DiscordTogether
 
 from dislash import ActionRow, Button, ButtonStyle
 from discord.ext import commands
-from easy_pil import Editor, Canvas
+from easy_pil import Editor
 
 class fun(commands.Cog):
 	"""Fun Command for Tango bot"""
 	def __init__(self, bot):
 		self.bot = bot
+		self.game = DiscordTogether(self.bot)
 	
 	@commands.command("bar", description="Percentage the number given and turn it into bar similar to exp bar")
 	async def _bar(self, ctx, number):
@@ -426,6 +428,49 @@ class fun(commands.Cog):
 
 		except Exception as e:
 			raise e
+
+	@commands.command("watch", description="Watch youtube with your friend!")
+	async def _watch(self, ctx, player=3, time=100):
+		if not ctx.author.voice:
+			await ctx.send("You must connect to a voice channel first!")
+			
+		link = await self.game.create_link(ctx.author.voice.channel.id, 'youtube', max_age=time, max_uses=player)
+		await ctx.send(f"**Youtube Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")
+
+	@commands.command("chess", description="play a game of chess with your friend!")
+	async def _chess(self, ctx, player=3, time=100):
+		if not ctx.author.voice:
+			await ctx.send("You must connect to a voice channel first!")
+			
+		link = await self.game.create_link(ctx.author.voice.channel.id, 'chess', max_age=time, max_uses=player)
+		await ctx.send(f"**Chess Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")
+
+	@commands.command("fishing", aliases=['fish'], description="play a game of fishing with your friend!")
+	async def _fishing(self, ctx, player=3, time=100):
+		if not ctx.author.voice:
+			await ctx.send("You must connect to a voice channel first!")
+			
+		link = await self.game.create_link(ctx.author.voice.channel.id, 'betrayal', max_age=time, max_uses=player)
+		await ctx.send(f"**Fishing Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")	
+
+	@commands.command("betrayal", aliases=['betray'], description="play a game of betrayal with your friend!")
+	async def _betrayal(self, ctx, player=3, time=100):
+		if not ctx.author.voice:
+			await ctx.send("You must connect to a voice channel first!")
+			
+		link = await self.game.create_link(ctx.author.voice.channel.id, 'betrayal', max_age=time, max_uses=player)
+		await ctx.send(f"**Betrayal Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")	
+
+
+	@commands.command("poker",  description="play a game of poker with your friend!")
+	async def _poker(self, ctx, player=3, time=100):
+		if not ctx.author.voice:
+			await ctx.send("You must connect to a voice channel first!")
+			
+		link = await self.game.create_link(ctx.author.voice.channel.id, 'poker', max_age=time, max_uses=player)
+		await ctx.send(f"**Poker Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")	
+
+ 	
 
 def setup(bot):
 	bot.add_cog(fun(bot))
