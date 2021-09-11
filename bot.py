@@ -9,8 +9,7 @@ import aiohttp
 
 #======================
 
-from discord.ext import commands
-from discord.ext import tasks
+from discord.ext import commands, tasks
 from dislash import SlashClient, Option, Type, InteractionClient
 
 class Tango(commands.Bot):
@@ -162,7 +161,6 @@ class Tango(commands.Bot):
 	async def on_command_error(self, ctx, error):
 		NotOwner="<Not Owner>"
 		if isinstance(error, (commands.MissingRole, commands.MissingAnyRole)):
-			print(error.__class__)
 			roles=[ctx.guild.get_role(role).mention for role in error.missing_roles] if isinstance(error, commands.errors.MissingAnyRole) else ctx.guild.get_role(int(error.missing_role)).mention
 			em=discord.Embed(
 				title="Missing Roles",
@@ -212,7 +210,7 @@ class Tango(commands.Bot):
 				raise error
 
 		elif isinstance(error, commands.CommandNotFound):
-			possi=difflib.get_close_matches(ctx.invoked_with.lower(), ['uptime', 'ping', 'news', 'info', "start", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete', 'liked']) 
+			possi=difflib.get_close_matches(ctx.invoked_with.lower(), list(x.name for x in self.commands)) 
 			em=discord.Embed(
 				title="Command Not Found",
 				description=f"No command called `{ctx.invoked_with}` did you mean `{', '.join(possi) if possi else '.....'}`",
@@ -269,18 +267,18 @@ class Tango(commands.Bot):
 		for fn in os.listdir("./cogs"):
 			if fn.endswith(".py"):
 				self.load_extension(f"cogs.{fn[:-3]}")
-		print(f"Log in as Tango#8351")
-		print("Discord.Python Version :", discord.__version__)
-		print("Ratelimit: ", self.is_ws_ratelimited())
 		self.load_extension("jishaku")
 		self.run(token)	
+		print(f"Log in as {self.user}")
+		print("Discord.Python Version :", discord.__version__)
+		print("Ratelimit: ", self.is_ws_ratelimited())
 
 def setup(self):
 	self.add_cog(Tango(self))
 
 class HelpPage(commands.HelpCommand):
 	def get_ending_note(self, category: bool):
-		return f"Use {self.clean_prefix}{self.invoked_with} [{'Category' if category == True else 'command'}] for more info on {'all commands' if category == True else 'the command'}"
+		return f"Use {self.clean_prefix}{self.invoked_with} [{'Category' if category else 'command'}] for more info on {'all commands' if category else 'the command'}"
 
 	def get_command_signature(self, command):
 		return command.signature if command.signature else " "
@@ -312,7 +310,7 @@ class HelpPage(commands.HelpCommand):
 			icon_url=self.context.author.avatar_url
 		)
 		em.set_footer(
-			text=self.get_ending_note(True) + " Or click the buttons to move the page!",
+			text=self.get_ending_note(True),
 			icon_url=self.context.author.avatar_url
 		)
 		channel=self.get_destination()
@@ -400,10 +398,9 @@ class HelpPage(commands.HelpCommand):
 
 	async def command_not_found(self, error):
 		channel = self.get_destination()
-		possi=difflib.get_close_matches(error.lower(), ['uptime', 'ping', 'news', 'info', "start", "channel", "post", "videos", "search", "setting", 'login','profile', 'view', 'comment', 'logout', 'delete'])
 		category=difflib.get_close_matches(error.title(), ["owner", "fun", "social", "information"])
 
-		if category and not possi:
+		if category:
 			embed = discord.Embed(
 				title=f"No Category called '{error}' ",
 				description=f"Did you mean `{', '.join(category)}`",
@@ -417,20 +414,6 @@ class HelpPage(commands.HelpCommand):
 			)
 			await channel.send(embed=embed)
 		
-		elif possi and not category:
-			embed = discord.Embed(
-				title=f"No Command called '{error}' ",
-				description=f"Did you mean `{', '.join(possi)}`",
-				color=discord.Color.red() 
-			).set_author(
-				name=self.context.author,
-				icon_url=self.context.author.avatar_url
-			).set_footer(
-				text=f"Use {self.clean_prefix}{self.invoked_with} for more info about all commands",
-				icon_url=self.context.author.avatar_url
-			)
-			await channel.send(embed=embed)
-
 		else:
 			embed = discord.Embed(
 				title=f"No Command called '{error}' ",

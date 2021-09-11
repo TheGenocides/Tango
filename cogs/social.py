@@ -6,7 +6,6 @@ import datetime
 import ast
 import requests
 import base64
-import random
 
 #=============================== 
 
@@ -3652,7 +3651,7 @@ class social(commands.Cog):
  
 			await cur.close()
 			await con.close()
-			
+
 			con=await helper.connect("db/video.db")
 			cur=await helper.cursor(con)
 			await cur.execute("SELECT * FROM video WHERE ID = ?", (video_id,))
@@ -3660,17 +3659,6 @@ class social(commands.Cog):
  
 			await cur.close()
 			await con.close()
-
-			tz=datetime.datetime.utcfromtimestamp(int(video[0][10]))
-			con=await helper.connect("db/channel.db")
-			cur=await helper.cursor(con)
-			
-			if not video:
-				await ctx.send(embed=discord.Embed(
-					description="This video doesnt have comments",
-					color=discord.Color.red()
-				))
-				return
 			
 			if not ctx.channel.is_nsfw() and video[0][14] == "y":
 				await ctx.send(embed=discord.Embed(
@@ -3679,184 +3667,61 @@ class social(commands.Cog):
 				))
 				return
 
-			loop=True
-			embed=None
-			page = 0
-			comments=len(data)
-			if comments > 1:
-				while True:
-					commenter=await helper.find_in_channel(data[page][0])
-					user=await helper.find_in_channel(data[page][0])
-					if loop == True:
-						em=discord.Embed(
-							title=f"Comments on '{video[0][1]}'",
-							description=f"**[<t:{data[page][3]}:R> {user[1]}]:** {data[page][1]}\n",
-							color=self.embed_color,
-							timestamp=tz
-						).set_footer(
-							text=f"Comments {page + 1}/{comments} | Comment ID: {data[page][2]} | Video ID: {video_id}",
-							icon_url=commenter[3]
-						).set_author(
-							name=f"Commented by @{user[1]}",
-							icon_url=commenter[3]
-						)
+			creator=await helper.find_in_channel(video[0][0])
 
-						embed=await ctx.send(
-							embed=em,
-							components=[
-								ActionRow(
-									Button(
-										style=ButtonStyle.green,
-										label="Scrollup",
-										emoji="⏫",
-										custom_id="up"
-									),
-									Button(
-										style=ButtonStyle.red,
-										label="Cancel",
-										emoji="<:tick_no:874284510575996968>",
-										custom_id="delete-button"
-									)
-								),
-								ActionRow(
-									Button(
-										style=ButtonStyle.green,
-										label="Scrolldown",
-										emoji="⏬",
-										custom_id="down"
-									)
-								)
-							]
-						)
-
-					else:
-						em=discord.Embed(
-							title=f"Comments on '{video[0][1]}'",
-							description=f"**[<t:{data[page][3]}:R> {user[1]}]:** {data[page][1]}\n",
-							color=self.embed_color,
-							timestamp=tz
-						).set_footer(
-							text=f"Comments {page + 1}/{comments} | Comment ID: {data[page][2]} | Video ID: {video_id}",
-							icon_url=commenter[3]
-						).set_author(
-							name=f"Commented by @{user[1]}",
-							icon_url=commenter[3]
-						)
-						
-						await embed.delete()
-						embed=await ctx.send(
-							embed=em,
-							components=[
-								ActionRow(
-									Button(
-										style=ButtonStyle.green,
-										label="Scrollup",
-										emoji="⏫",
-										custom_id="up"
-									),
-									Button(
-										style=ButtonStyle.red,
-										label="Cancel",
-										emoji="<:tick_no:874284510575996968>",
-										custom_id="delete-button"
-									)
-								),
-								ActionRow(
-									Button(
-										style=ButtonStyle.green,
-										label="Scrolldown",
-										emoji="⏬",
-										custom_id="down"
-									)
-								)
-							]
-						)
-
-					while True:
-						try:
-							inter = await ctx.wait_for_button_click(lambda inter: inter.message == embed and inter.channel == ctx.channel, timeout=15.0)
-						
-							if inter.author != ctx.author:
-								await inter.reply(embed=discord.Embed(
-									description="You are not the member who use this command!",
-									color=discord.Color.red()
-								), 
-									ephemeral=True
-								)
-								
-							else:
-								break
-
-						except asyncio.TimeoutError:
-							await ctx.send(embed=discord.Embed(
-								title="Timeout!",
-								description="I have stop the command due to its long activity!",
-								color=discord.Color.red()
-							))
-							return
-
-					button_id = inter.clicked_button.custom_id
-					if button_id == "up":
-						if page == (comments - 1):
-							page = 0
-							loop=False
-						
-						else:
-							page += 1
-							loop = False
-
-					elif button_id == "down":
-						if page == 0:
-							page = (comments - 1)
-							loop=False
-						
-						else:
-							page -= 1
-							loop = False
-
-					elif button_id == "delete-button":
-						await embed.delete()
-						await ctx.send(
-							embed=discord.Embed(
-							description=f"{ctx.author.mention} thanks for using Tango bot :blush:",
-							color=self.embed_color,
-						)
+			embeds=[]
+			txt=''
+			counter = 0
+			all_counter = 0
+			for id in data:
+				user=await self.bot.fetch_user(id[0])
+				txt += f"**[<t:{id[3]}:R> {user.name}]:** {id[1]}\n"
+				counter += 1
+				all_counter += 1
+				if counter == 5:
+					em=discord.Embed(
+						title=f"Comments on '{video[0][1]}'",
+						description=txt,
+						color=self.embed_color,
+					).set_author(
+						name=f"Creator @{creator[1]}",
+						icon_url=creator[3]
 					)
-						break
-			else:
-				try:
-					commenter=await helper.find_in_channel(data[page][0])
-				except IndexError:
-					await ctx.send(embed=discord.Embed(
-						description="This video doesn't have comments! be the first one who did! use `p!comment <video id> <message>` to comment the video! and use `p!comment <video id>` to look the comments list!",
-						color=discord.Color.red()
-					))
-					return
-
-				user=await self.bot.fetch_user(data[page][0])
+					counter = 0
+					txt = ""
+					embeds.append(em)
+			
+			if len(txt) > 0:
 				em=discord.Embed(
 					title=f"Comments on '{video[0][1]}'",
-					description=f"**[<t:{data[page][3]}:R> {commenter[1]}]:** {data[page][1]}\n",
+					description=txt,
 					color=self.embed_color,
-					timestamp=tz
-				).set_footer(
-					text=f"Comments {page + 1}/{comments} | Comment ID: {data[page][2]} | Video ID: {video_id}",
-					icon_url=commenter[3]
 				).set_author(
-					name=f"Commented by @{commenter[1]}",
-					icon_url=commenter[3]
+					name=f"Creator @{creator[1]}",
+					icon_url=creator[3]
 				)
+				embeds.append(em)
 
-				embed=await ctx.send(
-					embed=em,
-					components=[
+			page = 0
+			comments=len(embeds)
+			
+			if comments >= 1:
+				msg=await ctx.send(embed=embeds[page].set_footer(
+					text=f"Page {page + 1}/{len(embeds)} | {len(data)} Comments!",
+					icon_url=creator[3]
+				), components=[
 						ActionRow(
 							Button(
 								style=ButtonStyle.green,
 								label="Scrollup",
 								emoji="⏫",
-								disabled=True,
 								custom_id="up"
+							),
+							Button(
+								style=ButtonStyle.red,
+								label="Cancel",
+								emoji="<:tick_no:874284510575996968>",
+								custom_id="delete"
 							)
 						),
 						ActionRow(
@@ -3864,13 +3729,72 @@ class social(commands.Cog):
 								style=ButtonStyle.green,
 								label="Scrolldown",
 								emoji="⏬",
-								disabled=True,
 								custom_id="down"
 							)
 						)
 					]
 				)
 
+				on_click=msg.create_click_listener(timeout=60)
+				
+				@on_click.not_from_user(ctx.author, cancel_others=True, reset_timeout=False)
+				async def _not_from_author(inter):
+					await inter.reply(
+						embed=discord.Embed(
+							description="You are not the member who use this command!",
+							color=discord.Color.red()
+						), 
+							ephemeral=True
+					)
+
+				@on_click.matching_id("up")
+				async def _UP(inter):
+					nonlocal page
+					if page == (comments - 1):
+						page = 0
+					
+					else:
+						page += 1
+
+				@on_click.matching_id("down")
+				async def _DOWN(inter): 
+					nonlocal page
+					if page == 0:
+						page = (comments - 1)
+					
+					else:
+						page -= 1				
+
+				@on_click.matching_id("delete")
+				async def _DELETE(inter):
+					await inter.reply(
+						type=7,
+						embed=discord.Embed(
+						description=f"{ctx.author.mention} thanks for using Tango bot :blush:",
+						color=self.embed_color,
+					)
+				)
+
+				@on_click.no_checks()
+				async def _No_check(inter):
+					if not inter.clicked_button.id == "delete":
+						await inter.reply(
+							type=7,
+							embed=embeds[page].set_footer(
+								text=f"Page {page + 1}/{len(embeds)} | {len(data)} Comments!",
+								icon_url=creator[3]
+						))
+					else:
+						pass
+						
+			else:
+				await ctx.send(embed=discord.Embed(
+					description="This video doesn't have comments! be the first one who did! use `p!comment <video id> <message>` to comment the video! and use `p!comment <video id>` to look the comments list!",
+					color=discord.Color.red()
+				))
+				return
+
+				
 	@commands.command("delete", description="Delete a video through its ID")
 	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _delete(self, ctx, ID):
@@ -5202,21 +5126,18 @@ class social(commands.Cog):
 				txt = ""
 				embeds.append(em)
 
-			elif counter < 5 and counter == len(sets):
-				em=discord.Embed(
-					title=f"Following {len(sets)} channels!",
-					description=txt,
-					color=self.embed_color
-				)
-				counter = 0
-				txt = ""
-				embeds.append(em)
-
+		if not len(txt) == 0:
+			em=discord.Embed(
+				title=f"Following {len(sets)} channels!",
+				description=txt,
+				color=self.embed_color
+			)
+			embeds.append(em)
 
 		page = 0
 		msg=await ctx.send(
 			embed=embeds[page].set_footer(
-				text=f"Page {page + 1}/{len(embeds)} | {len(sets)} Following!"
+				text=f"Page {page + 1}/{len(embeds)} | {len(data)} Comments! | {len(sets)} Following!"
 			),
 			components=[
 				ActionRow(
@@ -5282,7 +5203,7 @@ class social(commands.Cog):
 			if not inter.clicked_button.id == "delete-button":
 				await msg.edit(
 					embed=embeds[page].set_footer(
-						text=f"Page {page + 1}/{len(embeds)} | {len(sets)} Following!"
+						text=f"Page {page + 1}/{len(embeds)} | {len(data)} Comments! | {len(sets)} Following!"
 				))
 			else:
 				pass

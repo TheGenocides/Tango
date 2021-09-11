@@ -3,7 +3,7 @@ import difflib
 import random
 import animec
 import time
-from uuid import uuid4
+from uuid import uuid4						
 
 async def connect(filename):
 	con=await aiosqlite.connect(filename)

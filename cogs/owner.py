@@ -13,6 +13,14 @@ class owner(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
+	@commands.command("change")
+	async def _change(self, ctx):
+		con=await helper.connect("db/channel.db")
+		cur=await helper.cursor(con)
+		await cur.execute("SELECT * FROM channel WHERE member_id = ?", (637194463185469467,))
+		await ctx.send(await cur.fetchone())
+
+
 	@commands.command("verify_all")
 	@commands.is_owner()
 	async def _verify_all(self, ctx):

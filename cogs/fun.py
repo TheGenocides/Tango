@@ -426,8 +426,8 @@ class fun(commands.Cog):
 					]	
 				)
 
-		except Exception as e:
-			raise e
+		except AttributeError:
+			await msg.edit(content=f"No anime called `{name}`. Make sure to type it properly")
 
 	@commands.command("watch", description="Watch youtube with your friend!")
 	async def _watch(self, ctx, player=3, time=100):
