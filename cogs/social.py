@@ -103,10 +103,6 @@ class social(commands.Cog):
 	@commands.command("start", description="Make your Tango bot account")
 	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _start(self, ctx):
-		# if not ctx.author.id in self.bot.owner_ids:
-		# 	await ctx.send("This cmd is other renovation")
-		# 	return
-
 		age=time.time()
 		db=await helper.connect("db/channel.db")
 		db2=await helper.connect("db/info.db")
@@ -142,7 +138,8 @@ class social(commands.Cog):
 			await ctx.send(embed=self.login_error)
 			return
 
-		embed_message=await ctx.send(embed=discord.Embed(
+		embed_message=await ctx.send(
+			embed=discord.Embed(
 			title="Time to get start!!",
 			description="Hello There 👋\nYou have 1 to 5 steps to make your TangoBot account, you can always press abort button to cancel the command! Click the green button to continues or click red button to cancel this command. The bot will guide you through the rest",
 			color=self.embed_color
@@ -156,8 +153,9 @@ class social(commands.Cog):
 		
 		while True:
 			try:
-				inter = await ctx.wait_for_button_click(lambda inter: inter.author == ctx.author and inter.channel == ctx.channel and inter.message == embed_message, timeout=20)	
 				
+				await asyncio.sleep(0.5)
+				inter = await embed_message.wait_for_button_click(lambda inter: inter.channel == ctx.channel, timeout=20)
 				if inter.author != ctx.author:
 					await inter.reply(embed=discord.Embed(
 						description="You are not the member who use this command!",
@@ -165,9 +163,22 @@ class social(commands.Cog):
 					), 
 						ephemeral=True
 					)
-					
+
+				elif inter.component.custom_id == "red":
+					await inter.reply(
+						type=7,
+						embed=discord.Embed(
+							description="Aborting...",
+							color=discord.Color.red()
+						), components=[
+
+						]
+					)
+					return
+
 				else:
 					break
+
 
 			except asyncio.TimeoutError:
 				await embed_message.delete()
@@ -179,6 +190,7 @@ class social(commands.Cog):
 				return
 
 		try:
+			
 			#UserName Name 
 			message=await embed_message.edit(
 				embed=discord.Embed(
@@ -258,7 +270,7 @@ class social(commands.Cog):
 
 			while True:
 				try:
-					inter = await embed_message.wait_for_dropdown(check=lambda interaction: interaction.author == ctx.author and interaction.message == embed_message, timeout=60)
+					inter = await embed_message.wait_for_dropdown(lambda inter: inter.author == ctx.author, timeout=30)
 					if inter.author != ctx.author:
 						await inter.reply(embed=discord.Embed(
 							description="You are not the member who use this command!",
@@ -547,7 +559,7 @@ class social(commands.Cog):
 			
 
 			@on_click.timeout
-			async def _on_timeout():
+			async def _on_timeout(inter):
 				await confirm.delete()
 				await ctx.send(
 					ctx.author.mention,
@@ -855,7 +867,7 @@ class social(commands.Cog):
 								on_click.kill()
 
 							@on_click.timeout
-							async def on_timeout():
+							async def on_timeout(inter):
 								await em.delete()
 								await ctx.send(
 									ctx.author.mention,
@@ -1008,7 +1020,7 @@ class social(commands.Cog):
 						on_click.kill()
 
 					@on_click.timeout
-					async def on_timeout():
+					async def on_timeout(inter):
 						await em.delete()
 						await ctx.send(
 							ctx.author.mention,
@@ -1035,7 +1047,7 @@ class social(commands.Cog):
 	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _videos(self, ctx):
 		
-		data=await helper.find_in_video(ctx.author.id, False, mode="all", verified='n')
+		data=await helper.find_in_video(ctx.author.id, False, mode="all", verified='y')
 		channel_data=await helper.find_in_channel(ctx.author.id)
 		info = await helper.find_in_info(ctx.author.id)
 		
@@ -1049,13 +1061,13 @@ class social(commands.Cog):
 
 		video=int(channel_data[8]) 
 		i = video - 1
-
 		if not data or i < 0:
 			await ctx.send(embed=self.video_error)
 			return
 
 		if video > 1 and len(data) > 1: 
 			while True:
+				print(data)
 				raw_date=datetime.datetime.fromtimestamp(int(data[i][10]))
 				date_time=raw_date.strftime("%m/%d/%Y")
 				msg=await ctx.send(
@@ -1469,10 +1481,8 @@ class social(commands.Cog):
 			try:
 				while True:
 					try:
-						print(1)
+						
 						inter = await ctx.wait_for_button_click(lambda inter: inter.message == msg or inter.message == file and inter.channel == ctx.channel, timeout=100)
-						print(inter)
-						print(inter.clicked_button.custom_id)
 						if inter.author != ctx.author:
 							await inter.reply(embed=discord.Embed(
 								description="You are not the member who use this command!",

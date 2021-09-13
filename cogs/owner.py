@@ -35,7 +35,9 @@ class owner(commands.Cog):
 		verified=self.bot.get_channel(884303044534206485)
 		log=self.bot.get_channel(873919769122865162)
 		data=await helper.find_in_video_by_id(ID, False)
-		user=self.bot.get_user(int(data[0]))
+		print(data)
+		user=self.bot.get_user(data[0])
+		print(data)
 		if not data:
 			await ctx.send("wrong id :/")
 			return
@@ -117,24 +119,30 @@ class owner(commands.Cog):
 		con=await helper.connect('db/channel.db')
 		con2=await helper.connect('db/info.db')
 		con3=await helper.connect('db/video.db')
+		con4=await helper.connect('db/comment.db')
 
 		cur=await helper.cursor(con)
 		cur2=await helper.cursor(con2)
 		cur3=await helper.cursor(con3)
+		cur4=await helper.cursor(con4)
 
 		await cur.execute("DELETE FROM channel WHERE member_id = ?", (ID,))
 		await cur2.execute("DELETE FROM info WHERE member_id = ?", (ID,))
 		await cur3.execute("DELETE FROM video WHERE member_id = ?", (ID,))
+		await cur4.execute("DELETE FROM comments WHERE commenter_id = ?", (ID,))
 
 		await con.commit()
 		await con2.commit()
 		await con3.commit()
+		await con4.commit()
 		await cur.close()
 		await cur2.close()
 		await cur3.close()
+		await cur4.close()
 		await con.close()
 		await con2.close()
 		await con3.close()
+		await con4.close()
 
 	# @commands.command("ss", hidden=True)
 	# @commands.is_owner()
@@ -201,6 +209,14 @@ class owner(commands.Cog):
 				description=f"```py\n{tb}\n```",
 				color=discord.Color.red()
 			))
+
+	@commands.command("fetch_channel")
+	@commands.is_owner()
+	async def _fetch_channel(self, ctx, ID):
+		channel=await helper.find_in_channel(ID)
+		if not channel:
+			await ctx.send("no channel found")
+		await ctx.send(channel)
 
 def setup(bot):
 	bot.add_cog(owner(bot))

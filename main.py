@@ -12,7 +12,7 @@ async def before_invoke(ctx):
 @bot.after_invoke
 async def after_invoke(ctx):
 	bot.processing_commands -= 1
-
+ 
 dotenv.load_dotenv()
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_RETAIN"] = "True"

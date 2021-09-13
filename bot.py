@@ -25,7 +25,7 @@ class Tango(commands.Bot):
 			case_insensitive=True,
 			activity=discord.Activity(name="10 Accounts | p!help", type=discord.ActivityType.watching),
 			status=discord.Status.idle,
-			owner_ids=[685082846993317953, 687943803604303872, 806725119917162527]
+			owner_ids=[685082846993317953, 687943803604303872, 806725119917162527, 794783405778534421]
 		)
 
 
