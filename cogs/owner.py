@@ -143,6 +143,7 @@ class owner(commands.Cog):
 		await con2.close()
 		await con3.close()
 		await con4.close()
+		await ctx.send("Done!")
 
 	# @commands.command("ss", hidden=True)
 	# @commands.is_owner()
