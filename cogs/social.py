@@ -807,7 +807,7 @@ class social(commands.Cog):
 								await con.close()
 								await inter.reply(
 									content="Posted! Now you need to wait 5 to 10 mins until this video got verified! If it take longer then that use `p!report` command!",
-									type=ResponseType.UpdateMessage
+									type=7
 								)
 
 								await log.send(

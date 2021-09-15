@@ -433,7 +433,8 @@ class fun(commands.Cog):
 	async def _watch(self, ctx, player=3, time=100):
 		if not ctx.author.voice:
 			await ctx.send("You must connect to a voice channel first!")
-			
+			return
+
 		link = await self.game.create_link(ctx.author.voice.channel.id, 'youtube', max_age=time, max_uses=player)
 		await ctx.send(f"**Youtube Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")
 
@@ -441,7 +442,8 @@ class fun(commands.Cog):
 	async def _chess(self, ctx, player=3, time=100):
 		if not ctx.author.voice:
 			await ctx.send("You must connect to a voice channel first!")
-			
+			return
+
 		link = await self.game.create_link(ctx.author.voice.channel.id, 'chess', max_age=time, max_uses=player)
 		await ctx.send(f"**Chess Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")
 
@@ -449,7 +451,8 @@ class fun(commands.Cog):
 	async def _fishing(self, ctx, player=3, time=100):
 		if not ctx.author.voice:
 			await ctx.send("You must connect to a voice channel first!")
-			
+			return
+
 		link = await self.game.create_link(ctx.author.voice.channel.id, 'betrayal', max_age=time, max_uses=player)
 		await ctx.send(f"**Fishing Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")	
 
@@ -457,7 +460,8 @@ class fun(commands.Cog):
 	async def _betrayal(self, ctx, player=3, time=100):
 		if not ctx.author.voice:
 			await ctx.send("You must connect to a voice channel first!")
-			
+			return
+
 		link = await self.game.create_link(ctx.author.voice.channel.id, 'betrayal', max_age=time, max_uses=player)
 		await ctx.send(f"**Betrayal Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")	
 
@@ -466,11 +470,11 @@ class fun(commands.Cog):
 	async def _poker(self, ctx, player=3, time=100):
 		if not ctx.author.voice:
 			await ctx.send("You must connect to a voice channel first!")
-			
+			return
+
 		link = await self.game.create_link(ctx.author.voice.channel.id, 'poker', max_age=time, max_uses=player)
 		await ctx.send(f"**Poker Together!**\n**`Host > Click the Link`**\n**`Player > Click the play button, you do need to wait till the host click the blue link!`**\n**`Spectator > Click the spectate button`**\nlink ---> {link}")	
 
  	
-
 def setup(bot):
 	bot.add_cog(fun(bot))

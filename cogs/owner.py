@@ -20,7 +20,6 @@ class owner(commands.Cog):
 		await cur.execute("SELECT * FROM channel WHERE member_id = ?", (637194463185469467,))
 		await ctx.send(await cur.fetchone())
 
-
 	@commands.command("verify_all")
 	@commands.is_owner()
 	async def _verify_all(self, ctx):
@@ -218,6 +217,14 @@ class owner(commands.Cog):
 		if not channel:
 			await ctx.send("no channel found")
 		await ctx.send(channel)
+
+	@commands.command("fetch_video")
+	@commands.is_owner()
+	async def _fetch_video(self, ctx, ID):
+		con=await helper.connect("db/video.db")
+		cur=await helper.cursor(con)
+		await cur.execute("SELECT * FROM video WHERE ID = ?", (ID,))
+		await ctx.send(await cur.fetchone())
 
 def setup(bot):
 	bot.add_cog(owner(bot))
