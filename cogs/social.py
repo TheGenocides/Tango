@@ -18,7 +18,7 @@ class social(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.embed_color=discord.Color.from_rgb(136, 223 ,251)
-		self.special_characters = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`", " "]
+		self.special_characters = ["!", "”", "#", "$", "%", "&", "’", ")", "(", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "^", ">", "{", "}", "~", "`"]
 		self.channel_error = discord.Embed(
 			description="You haven't made your channel, Use `p!start` command!",
 			color=discord.Color.red()
@@ -153,7 +153,6 @@ class social(commands.Cog):
 		
 		while True:
 			try:
-				
 				await asyncio.sleep(0.5)
 				inter = await embed_message.wait_for_button_click(lambda inter: inter.channel == ctx.channel, timeout=20)
 				if inter.author != ctx.author:
@@ -1046,7 +1045,10 @@ class social(commands.Cog):
 	@commands.command("videos",  description="Check up your videos")
 	@commands.cooldown(1, 10, commands.BucketType.user)
 	async def _videos(self, ctx):
-		
+		if not ctx.author.id in self.bot.owner_ids:
+			await ctx.send("This command is under renovation")
+			return
+
 		data=await helper.find_in_video(ctx.author.id, False, mode="all", verified='y')
 		channel_data=await helper.find_in_channel(ctx.author.id)
 		info = await helper.find_in_info(ctx.author.id)
@@ -1170,30 +1172,18 @@ class social(commands.Cog):
 				nonlocal i
 				if i == 0:
 					i = (len(data) - 1)
-					await msg.delete()
-					await file.delete()
-					await asyncio.sleep(0.5)
 				
 				else:
 					i -= 1
-					await msg.delete()
-					await file.delete()
-					await asyncio.sleep(0.5)
 
 			@on_click.matching_id("right-button")
 			async def _Right_button(inter): #Right Button
 				nonlocal i
 				if i == (len(data) - 1):
 					i = 0
-					await msg.delete()
-					await file.delete()
-					await asyncio.sleep(0.5)
 
 				else:
 					i += 1
-					await msg.delete()
-					await file.delete()
-					await asyncio.sleep(0.5)
 
 			@on_click.matching_id("delete-button")
 			async def _Delete_button(inter): #Delete Button
@@ -1210,34 +1200,118 @@ class social(commands.Cog):
 			async def _Select_Button(inter): #Select Button
 				nonlocal i 
 				progress = True
-				try:
-					await inter.reply(
-						ctx.author.mention, 
+				try:					
+					while True:
+						await inter.reply(
 						embed=discord.Embed(
 							description=f"Which video you want to view? You have **{video}** videos",
 							color=self.embed_color
-						))					
-					while True:
+						))
 						select=await self.bot.wait_for("message", check=lambda x: x.author == ctx.author and x.channel == ctx.channel, timeout=20)
 						page=0
 						try:
-							int(select.content)
+							page=int(select.content)
+						except ValueError:
+							await ctx.send("Value must be a number not a letters")
+						
 
-						if page > video:
+						if page > video and isinstance(page, int):
 							await ctx.send(f"You only have **{video}** not {select.content}")
 							await asyncio.sleep(0.5)
 						
-						elif page <= 0:
-							await ctx.send("Number cannot be minus, zero, or letters enter it again with ")
+						elif page <= 0 and isinstance(page, int):
+							await ctx.send("Number cannot be minus, zero, or letters. Enter it again!")
 							await asyncio.sleep(0.5)
 						
 						else:
 							page = page - 1
 							i = page
-							await msg.delete()
-							await file.delete()
-							await asyncio.sleep(0.5)
 							progress=False
+							await inter.reply(
+								type=ResponseType.UpdateMessage,
+								embed=discord.Embed(
+								title='...' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][1],
+								url='' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+								description="This video is set to nsfw setting! Make sure to access this video in nsfw channels!" if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][2],
+								color=discord.Color.red() if data[i][14] == 'y' else self.embed_color
+								).set_footer(
+									text=f"Videos {i + 1}/{video} | Date: {date_time} | ID: {data[i][11]}",
+									icon_url=channel_data[3]
+								).set_author(
+									name=f"{ctx.author.name} (@{channel_data[1]})",
+									icon_url=channel_data[3]
+								), components=[
+									ActionRow(
+										Button(
+											style=ButtonStyle.blurple,
+											label="",
+											emoji="\U00002b05",
+											custom_id="left-button"
+										),
+										Button(
+											style=ButtonStyle.red,
+											label="",
+											emoji="<:tick_no:874284510575996968>",
+											custom_id="delete-button",
+										),
+										Button(
+											style=ButtonStyle.blurple,
+											label="",
+											emoji="🔢",
+											custom_id="select-button",
+										),
+										Button(
+											style=ButtonStyle.blurple,
+											label="",
+											emoji="\U000027a1",
+											custom_id="right-button"
+										)
+									)
+								]
+							)
+							await file.edit(
+								content= 'Search this video in nsfw channel!' if data[i][14] == 'y' else data[i][3],
+								components=[
+									ActionRow(
+										Button(
+											style=ButtonStyle.blurple,
+											label=data[i][4],
+											emoji="\U0001f465",
+											custom_id="view-button",
+											disabled=True
+										),
+										Button(
+											style=ButtonStyle.grey,
+											label=channel_data[4],
+											emoji="<:user_icon:877535226694352946>",
+											custom_id="subs-button",
+											disabled=True
+										),
+										Button(
+											style=ButtonStyle.green,
+											label=data[i][5],
+											emoji="<:likes:875659362343993404>",
+											custom_id="like-button",
+											disabled=True
+										),
+										Button(
+											style=ButtonStyle.red,
+											label=data[i][6],
+											emoji="<:dislikes:875659362264309821>",
+											custom_id="dislike-button",
+											disabled=True
+										),
+										Button(
+											style=ButtonStyle.grey,
+											label=date_time,
+											emoji="\U0000231b",
+											custom_id="time-button",
+											disabled=True
+										)
+									)
+								]
+							)
+							break
 
 				except Exception as e:
 					raise e
@@ -1247,8 +1321,92 @@ class social(commands.Cog):
 				if progress == True:
 					await inter.reply("Woah slowdown there mate! I asked you a question, answer it before clicking another button!", ephemeral= True)
 
-				else:
-					pass
+				elif not progress and not inter.component.custom_id == "select-button":
+					await inter.reply(
+						type=ResponseType.UpdateMessage,
+						embed=discord.Embed(
+						title='...' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][1],
+						url='' if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][3],
+						description="This video is set to nsfw setting! Make sure to access this video in nsfw channels!" if not ctx.channel.is_nsfw() and data[i][14] == 'y' else data[i][2],
+						color=discord.Color.red() if data[i][14] == 'y' else self.embed_color
+						).set_footer(
+							text=f"Videos {i + 1}/{video} | Date: {date_time} | ID: {data[i][11]}",
+							icon_url=channel_data[3]
+						).set_author(
+							name=f"{ctx.author.name} (@{channel_data[1]})",
+							icon_url=channel_data[3]
+						), components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="\U00002b05",
+									custom_id="left-button"
+								),
+								Button(
+									style=ButtonStyle.red,
+									label="",
+									emoji="<:tick_no:874284510575996968>",
+									custom_id="delete-button",
+								),
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="🔢",
+									custom_id="select-button",
+								),
+								Button(
+									style=ButtonStyle.blurple,
+									label="",
+									emoji="\U000027a1",
+									custom_id="right-button"
+								)
+							)
+						]
+					)
+					await file.edit(
+						content= 'Search this video in nsfw channel!' if data[i][14] == 'y' else data[i][3],
+						components=[
+							ActionRow(
+								Button(
+									style=ButtonStyle.blurple,
+									label=data[i][4],
+									emoji="\U0001f465",
+									custom_id="view-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=channel_data[4],
+									emoji="<:user_icon:877535226694352946>",
+									custom_id="subs-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.green,
+									label=data[i][5],
+									emoji="<:likes:875659362343993404>",
+									custom_id="like-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.red,
+									label=data[i][6],
+									emoji="<:dislikes:875659362264309821>",
+									custom_id="dislike-button",
+									disabled=True
+								),
+								Button(
+									style=ButtonStyle.grey,
+									label=date_time,
+									emoji="\U0000231b",
+									custom_id="time-button",
+									disabled=True
+								)
+							)
+						]
+					)
+
 
 		else:
 			i = 0
